@@ -375,7 +375,7 @@ sudo -u postgres script/setup-db
 sudo -u postgres script/initdb
 
 echo "Cloning tests"
-
+chown -R system76:www-data /var/lib/openqa/
 sudo -u system76 git clone git@github.com:pop-os/os-autoinst-distri-pop.git /var/lib/openqa/tests/pop
 cd /var/lib/openqa/tests/pop
 sudo -u system76 ../script/load_templates ./products/templates
