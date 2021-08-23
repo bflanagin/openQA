@@ -72,6 +72,9 @@ install-generic:
 		ln -sfn /usr/share/openqa/$$i "$(DESTDIR)"/var/lib/openqa/$$i ;\
 	done
 #
+	install -m 644 "$(DESTDIR)"/etc/apache2/apache2.conf "$(DESTDIR)"/etc/apache2/apache2.conf.saved
+	install -m 644 etc/apache2/apache2.conf "$(DESTDIR)"/etc/apache2/apache2.conf
+#
 	install -d -m 755 "$(DESTDIR)"/etc/apache2/vhosts.d
 	for i in openqa-common.inc openqa.conf.template openqa-ssl.conf.template; do \
 		install -m 644 etc/apache2/vhosts.d/$$i "$(DESTDIR)"/etc/apache2/vhosts.d ;\
@@ -87,7 +90,8 @@ install-generic:
 	install -d -m 755 "$(DESTDIR)"/usr/lib/systemd/system
 	install -d -m 755 "$(DESTDIR)"/usr/lib/systemd/system-generators
 	install -d -m 755 "$(DESTDIR)"/usr/lib/tmpfiles.d
-	for i in systemd/*.{service,target,timer,path}; do \
+	
+	for i in $(shell ls systemd/*.{service,target,timer,path}); do \
 		install -m 644 $$i "$(DESTDIR)"/usr/lib/systemd/system ;\
 	done
 	sed \

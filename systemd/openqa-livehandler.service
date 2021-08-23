@@ -6,7 +6,7 @@ After=postgresql.service nss-lookup.target remote-fs.target
 Requires=openqa-webui.service
 
 [Service]
-User=geekotest
+User=system76
 ExecStart=/usr/share/openqa/script/openqa-livehandler-daemon
 
 [Install]
