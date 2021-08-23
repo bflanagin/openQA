@@ -343,7 +343,17 @@ clear
 
 echo "Installing Mojo and Mojolicious"
 
-apt-get -y -q install libmojo-ioloop-readwriteprocess-perl libmojo-pg-perl, libmojo-server-fastcgi-perl libmojolicious-perl libmojolicious-plugin-assetpak-perl libmojolicious-plugin-oauth2-perl libmojolicious-plugin-openapi-perl
+apt-get -y -q install libmojomojo-perl \
+libmojo-ioloop-readwriteprocess-perl \
+libmojo-pg-perl \
+libmojo-server-fastcgi-perl \
+libmojolicious-perl \
+libmojolicious-plugin-assetpak-perl \
+libmojolicious-plugin-oauth2-perl \ 
+libmojolicious-plugin-openapi-perl \ 
+libconfig-any-perl libconfig-any-perl \ 
+libconfig-any-perl libconfig-any-perl \ 
+libmojolicious-plugin-assetpack-perl
 
 clear 
  
@@ -380,8 +390,6 @@ chown -R system76:www-data /var/lib/openqa/
 sudo -u system76 git clone https://github.com/pop-os/os-autoinst-distri-pop.git /var/lib/openqa/tests/pop
 cd /var/lib/openqa/tests/pop
 sudo -u system76 /var/lib/openqa/script/load_templates ./products/templates
-
- 
 
  
  
