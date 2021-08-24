@@ -343,20 +343,38 @@ clear
 
 echo "Installing Mojo and Mojolicious"
 
-apt-get -y -q install libmojomojo-perl \
+apt-get -y -q install ruby-sass \
+ruby-xmlrpc \
+ruby-dev \
+ruby-rubygems \
+rubygems-integration \
+libmojomojo-perl \
 libmojo-ioloop-readwriteprocess-perl \
 libmojo-pg-perl \
 libmojo-server-fastcgi-perl \
 libmojolicious-perl \
 libmojolicious-plugin-assetpak-perl \
-libmojolicious-plugin-oauth2-perl \ 
-libmojolicious-plugin-openapi-perl \ 
-libconfig-any-perl libconfig-any-perl \ 
-libconfig-any-perl libconfig-any-perl \ 
-libmojolicious-plugin-assetpack-perl
+libmojolicious-plugin-oauth2-perl \
+libmojolicious-plugin-openapi-perl \
+libconfig-any-perl libconfig-any-perl \
+libconfig-any-perl libconfig-any-perl \
+libmojolicious-plugin-assetpack-perl \
+libjavascript-minifier-xs-perl
 
 clear 
- 
+
+echo "Installing Postgresql"
+apt-get -y -q install postgresql \
+libdbix-class-deploymenthandler-perl \
+libdbix-class-dynamicdefault-perl \
+libdbix-class-optimisticlocking-perl \
+libdbix-class-perl \
+libdbix-class-schema-loader-perl\
+libtext-diff-perl \
+libcommonmark-perl
+
+
+
 echo "Creating system user _openqa-worker and adding it to the proper groups"
  
 useradd -r _openqa-worker
