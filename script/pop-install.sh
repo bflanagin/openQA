@@ -387,7 +387,12 @@ do
 install -m 644 $i /usr/lib/systemd/system/
 done
 
+echo "changing permissions on /etc/openqa"
+chown -R system76:www-data /etc/openqa
+chmod -R go+r /etc/openqa
+
 echo "Enabling services"
+systemctl enable --now postgresql
 systemctl enable --now openqa-webui
 systemctl enable --now openqa-scheduler 
 systemctl enable --now openqa-worker@1
@@ -395,14 +400,15 @@ systemctl enable --now openqa-worker@1
 echo "Configuring Apache"
 cp /etc/apache2/vhosts.d/openqa.conf.template /etc/apache2/vhosts.d/openqa.conf
 /usr/share/openqa/script/configure-web-proxy
-systemctl restart apache2
+
 
 echo "Configuring Database"
 
-sudo -u postgres /usr/share/openqa/script/initdb
-sudo -u postgres /usr/share/openqa/script/setup-db
+#sudo -u postgres /usr/share/openqa/script/initdb
+#sudo -u postgres /usr/share/openqa/script/setup-db
 
 
+systemctl restart apache2
 
 echo "Cloning tests"
 chown -R system76:www-data /var/lib/openqa/
