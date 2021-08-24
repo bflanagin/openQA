@@ -327,7 +327,7 @@ apt-get -y -q install apache2 apache2-utils apache2-data apache2-bin
 
 echo "Installing Postgres"
 
-apt-get -y -q install postgresql postgressql-common postgres-client-common postgresql-client-13 postgres-13
+apt-get -y -q install postgresql
 
 
 echo "Installing Qemu"
