@@ -321,27 +321,20 @@ perl-modules-5.32 \
 perl-openssl-defaults \
 perl
 
-clear
-
-echo "Installing Apache"
+echo "\nInstalling Apache"
 
 apt-get -y -q install apache2 apache2-utils apache2-data apache2-bin
 
-clear
-
-echo "Installing Postgres"
+echo "\nInstalling Postgres"
 
 apt-get -y -q install postgresql postgressql-common postgres-client-common postgresql-client-13 postgres-13
 
-clear
 
-echo "Installing Qemu"
+echo "\nInstalling Qemu"
 
 apt-get -y -q install qemu qemu-utils qemu-system-x86 qemu-system-gui qemu-system-data qemu-system-common qemu-system-arm qemu-efi qemu-efi-arm qemu-efi-aarch64 qemu-block-extra libvirt-daemon-driver-qemu ipxe-qemu ipxe-qemu-256k-compat-efi-roms
 
-clear
-
-echo "Installing Mojo and Mojolicious"
+echo "\nInstalling Mojo and Mojolicious"
 
 apt-get -y -q install ruby-sass \
 ruby-xmlrpc \
@@ -360,10 +353,9 @@ libconfig-any-perl libconfig-any-perl \
 libconfig-any-perl libconfig-any-perl \
 libmojolicious-plugin-assetpack-perl \
 libjavascript-minifier-xs-perl
+ 
 
-clear 
-
-echo "Installing Postgresql"
+echo "\nInstalling Postgresql"
 apt-get -y -q install postgresql \
 libdbix-class-deploymenthandler-perl \
 libdbix-class-dynamicdefault-perl \
@@ -375,35 +367,35 @@ libcommonmark-perl
 
 
 
-echo "Creating system user _openqa-worker and adding it to the proper groups"
+echo "\nCreating system user _openqa-worker and adding it to the proper groups"
  
 useradd -r _openqa-worker
 adduser _openqa-worker www-data
 adduser _openqa-worker kvm
  
-echo "Adding system76 user to the proper groups"
+echo "\nAdding system76 user to the proper groups"
  
 adduser system76 www-data
 adduser system76 kvm
 
 clear
  
-echo "Installing openQA"
+echo "\nInstalling openQA"
  
 make install 
  
-echo "Configuring Apache"
+echo "\nConfiguring Apache"
 cp /etc/apache2/vhosts.d/openqa.conf.template /etc/apache2/vhosts.d/openqa.conf
 /usr/share/openqa/script/configure-web-proxy
 systemctl restart apache2
 
-echo "Configuring Database"
+echo "\nConfiguring Database"
 
 sudo -u postgres /usr/share/openqa/script/initdb
 sudo -u postgres /usr/share/openqa/script/setup-db
 
 
-echo "Cloning tests"
+echo "\nCloning tests"
 chown -R system76:www-data /var/lib/openqa/
 sudo -u system76 git clone https://github.com/pop-os/os-autoinst-distri-pop.git /var/lib/openqa/tests/pop
 cd /var/lib/openqa/tests/pop
