@@ -91,7 +91,7 @@ install-generic:
 	install -d -m 755 "$(DESTDIR)"/usr/lib/systemd/system-generators
 	install -d -m 755 "$(DESTDIR)"/usr/lib/tmpfiles.d
 	
-	for i in $(shell ls systemd/*.{service,target,timer,path}); do \
+	for i in $(shell ls `pwd`/systemd/*.{service,target,timer,path}); do \
 		install -m 644 $$i "$(DESTDIR)"/usr/lib/systemd/system ;\
 	done
 	sed \

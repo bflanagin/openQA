@@ -336,21 +336,19 @@ apt-get -y -q install qemu qemu-utils qemu-system-x86 qemu-system-gui qemu-syste
 
 echo "Installing Mojo and Mojolicious"
 
-apt-get -y -q install ruby-sass \
+apt-get -y -q install ruby \
+ruby-sass \
 ruby-xmlrpc \
 ruby-dev \
 ruby-rubygems \
 rubygems-integration \
-libmojomojo-perl \
 libmojo-ioloop-readwriteprocess-perl \
 libmojo-pg-perl \
 libmojo-server-fastcgi-perl \
 libmojolicious-perl \
-libmojolicious-plugin-assetpak-perl \
 libmojolicious-plugin-oauth2-perl \
 libmojolicious-plugin-openapi-perl \
-libconfig-any-perl libconfig-any-perl \
-libconfig-any-perl libconfig-any-perl \
+libconfig-any-perl \
 libmojolicious-plugin-assetpack-perl \
 libjavascript-minifier-xs-perl
  
@@ -382,6 +380,17 @@ adduser system76 kvm
 echo "Installing openQA"
  
 make install 
+
+echo "copying systemd files to systemd/system"
+for i in `pwd`/systemd/*.{service,target,timer,path}
+do
+install -m 644 $i /usr/lib/systemd/system/
+done
+
+echo "Enabling services"
+systemctl enable --now openqa-webui
+systemctl enable --now openqa-scheduler 
+systemctl enable --now openqa-worker@1
  
 echo "Configuring Apache"
 cp /etc/apache2/vhosts.d/openqa.conf.template /etc/apache2/vhosts.d/openqa.conf
@@ -394,12 +403,13 @@ sudo -u postgres /usr/share/openqa/script/initdb
 sudo -u postgres /usr/share/openqa/script/setup-db
 
 
+
 echo "Cloning tests"
 chown -R system76:www-data /var/lib/openqa/
 sudo -u system76 git clone https://github.com/pop-os/os-autoinst-distri-pop.git /var/lib/openqa/tests/pop
 cd /var/lib/openqa/tests/pop
 sudo -u system76 /var/lib/openqa/script/load_templates ./products/templates
 
- 
+
  
  
