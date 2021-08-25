@@ -6,7 +6,7 @@ After=postgresql.service openqa-setup-db.service openqa-scheduler.service nss-lo
 Requires=openqa-livehandler.service openqa-websockets.service openqa-gru.service openqa-enqueue-asset-cleanup.timer openqa-enqueue-result-cleanup.timer openqa-enqueue-bug-cleanup.timer
 
 [Service]
-User=geekotest
+User=system76
 ExecStart=/usr/share/openqa/script/openqa-webui-daemon
 
 [Install]
