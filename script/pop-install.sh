@@ -391,6 +391,17 @@ echo "changing permissions on /etc/openqa"
 chown -R system76:www-data /etc/openqa
 chmod -R go+r /etc/openqa
 
+echo "changing permissions on /var/lib/openqa"
+chown -R system76:www-data /var/lib/openqa
+chmod -R g+rw /var/lib/openqa
+
+echo "disabiling apparmor protection"
+mv /etc/apparmor.d/user.share.openqa* /etc/apparmor.d/disable/
+
+echo "creating symlink to /etc/openqa"
+mkdir /usr/share/openqa/etc 
+ln -s /etc/openqa /usr/share/openqa/etc/
+
 echo "Enabling services"
 systemctl enable --now postgresql
 systemctl enable --now openqa-webui
@@ -402,7 +413,7 @@ cp /etc/apache2/vhosts.d/openqa.conf.template /etc/apache2/vhosts.d/openqa.conf
 /usr/share/openqa/script/configure-web-proxy
 
 
-echo "Configuring Database"
+#echo "Configuring Database"
 
 #sudo -u postgres /usr/share/openqa/script/initdb
 #sudo -u postgres /usr/share/openqa/script/setup-db
