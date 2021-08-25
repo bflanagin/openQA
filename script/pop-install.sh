@@ -396,7 +396,7 @@ chown -R system76:www-data /var/lib/openqa
 chmod -R g+rw /var/lib/openqa
 
 echo "disabiling apparmor protection"
-mv /etc/apparmor.d/user.share.openqa* /etc/apparmor.d/disable/
+mv /etc/apparmor.d/usr.share.openqa* /etc/apparmor.d/disable/
 
 echo "creating symlink to /etc/openqa"
 mkdir /usr/share/openqa/etc 
@@ -411,14 +411,14 @@ systemctl enable --now openqa-worker@1
 echo "Configuring Apache"
 cp /etc/apache2/vhosts.d/openqa.conf.template /etc/apache2/vhosts.d/openqa.conf
 /usr/share/openqa/script/configure-web-proxy
+a2enmod expires
 
+echo "Configuring Database"
 
-#echo "Configuring Database"
+sudo -u postgres /usr/share/openqa/script/initdb
+sudo -u postgres /usr/share/openqa/script/setup-db
 
-#sudo -u postgres /usr/share/openqa/script/initdb
-#sudo -u postgres /usr/share/openqa/script/setup-db
-
-
+systemctl restart apparmor
 systemctl restart apache2
 
 echo "Cloning tests"
