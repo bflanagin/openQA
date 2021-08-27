@@ -1,3 +1,39 @@
+= Quick Install
+
+Install os-autoinst before installing openQA: https://github.com/system76/os-autoinst
+
+Create a system76 user account, and add him to the adm and sudo groups. 
+
+cd ./openQA
+
+sudo ./tools/pop-install.sh
+
+reboot
+
+cd /var/lib/openqa/
+
+sudo -u system76 ./script/load_templates /tests/pop/products/templates
+
+Place latest ISOs in /var/lib/openqa/factory/iso/
+
+== Ensure you have the latest needles
+
+cd /var/lib/openqa/tests/pop/
+
+git checkout branch default_install  
+
+== Test installation
+
+/var/lib/openqa/script/openqa-cli api -X POST isos ISO=pop-os_20.04_amd64_intel_32.iso DISTRI=pop FLAVOR=DVD VERSION=20.04 BUILD=32 ARCH=x86_64
+
+== Troubleshooting
+
+If the test above fails to start (stuck in scheduled) run `sudo systemctl start openqa-scheduler` and `sudo systemctl start openqa-worker@2`
+
+if the test above fails during the test but before qemu starts check the log for permission errors.
+
+= Original README
+
 :circleci: image:https://circleci.com/gh/os-autoinst/openQA/tree/master.svg?style=svg["CircleCI", link="https://circleci.com/gh/os-autoinst/openQA/tree/master"]
 :codecov: image:https://codecov.io/gh/os-autoinst/openQA/branch/master/graph/badge.svg[link=https://codecov.io/gh/os-autoinst/openQA]
 
