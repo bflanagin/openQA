@@ -1,0 +1,124 @@
+#!/bin/env python3
+
+import jenkins
+import sys
+import json
+import subprocess
+import os
+
+server_url = ""
+username = ""
+password = ""
+get = ["iso","package"]
+
+server = ""
+
+def find_iso(server,version,subversion):
+	if server:
+		job_info = server.get_job_info("pop-os/debug/"+str(version))
+		base_url = job_info["lastStableBuild"]["url"]
+		iso = job_info["lastStableBuild"]["number"]
+		if subversion == "intel":
+			label = "master/artifact/build/pop-os/"+str(version)+"/pop-os_"+str(version)+"_amd64_intel_debug_"+str(iso)+".iso"
+		else:
+			label = "master/artifact/build/pop-os/"+str(version)+"/pop-os_"+str(version)+"_nvidia_debug_"+str(iso)+".iso"
+		addins = "CHANNEL="+str(subversion)+",label="+label
+		
+		full_url = base_url+addins
+		return full_url
+
+## Looks like we'll need to create a special script to add packages to our base installs. Leaving this here for when that part of openQA is complete.
+
+def find_package():
+	pass
+
+def connecting_to_server(Url,UserName,Password):
+	#print("Connecting to Jenkins:",[Url,UserName,Password])
+	server = jenkins.Jenkins(Url,username=UserName,password=Password)
+	#print (server.jobs_count())
+	
+	if server.jobs_count() != -1:
+		return server
+	else:
+		return False
+
+
+def current_state():
+	error = ""
+	if server_url == "":
+		error += "Server has not been set.\n"
+	if username == "":
+		error += "Username has not been set.\n"
+	if password == "":
+		error += "Password has not been set.\n"
+
+	if error != "":
+		error += "\nExample useage: sudo -u system76 ./jenkins server 'https://buildchain.system76.com/' username <username> password <password> get iso|package version|name <version>|<packagename>\n"
+		
+	return error
+
+
+if __name__ == "__main__" :
+
+	for arg in sys.argv:
+	
+		if arg == "server":
+			idx = sys.argv.index(arg)
+			server_url = sys.argv[idx+1]
+		elif arg == "username":
+			idx = sys.argv.index(arg)
+			username = sys.argv[idx+1]
+		elif arg == "password":
+			idx = sys.argv.index(arg)
+			password = sys.argv[idx+1]
+		elif arg == "get":
+			idx = sys.argv.index(arg)
+			if sys.argv[idx+1] in ["iso","package"]:
+				#print("getting", sys.argv[idx+1])
+				pass
+			else:
+				#print("Not a valid get target")
+				exit()
+				
+	if current_state() == "":
+		server = connecting_to_server(server_url,username,password)
+		if server:
+			if sys.argv.index("get") != -1:
+				if sys.argv[idx+1] == "iso":
+					version = ""
+					subversion = "intel"
+					iso_url = ""
+					for arg in sys.argv:
+						if arg == "version":
+							idx = sys.argv.index(arg) 
+							version = sys.argv[idx+1]
+						if arg == "subversion":
+							idx = sys.argv.index(arg)
+							subversion = sys.argv[idx+1]
+					iso_url = find_iso(server,version,subversion)
+					download = iso_url.split("/")[-1]
+					if not os.path.isfile("/var/lib/openqa/factory/iso/"+download):
+						subprocess.run(["curl","-u",username+":"+password,"-o","/var/lib/openqa/factory/iso/"+download,iso_url])
+						subprocess.run(["/var/lib/openqa/script/openqa-cli",
+						 				"api",
+						 				"-X",
+						 				"POST",
+						 				"isos",
+						 				"ISO="+download,
+						 				"DISTRI=pop",
+						 				"FLAVOR=DVD",
+						 				"VERSION="+version,
+						 				"BUILD="+download.split("_")[-1].split(".")[0],
+						 				"ARCH=x86_64"])
+
+				elif sys.argv[idx+1] == "package":
+					pass
+						
+							
+	else:
+		print(current_state())
+			
+		
+			
+
+
