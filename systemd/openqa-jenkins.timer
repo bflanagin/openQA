@@ -1,0 +1,9 @@
+[Unit]
+Description=Grabs new build from jenkins server
+
+[Timer]
+OnCalendar=Hourly
+Persistent=true
+
+[Install]
+WantedBy=timers.target

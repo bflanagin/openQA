@@ -13,6 +13,17 @@ get = ["iso","package"]
 
 server = ""
 
+settings = {}
+
+def get_settings():
+ if os.path.isfile("/etc/openqa/jenkins.json"):
+ 	file = open("/etc/openqa/jenkins.json","r")
+ 	settings = json.loads(file.read())
+ 	file.close()
+ 	return settings
+ else:
+ 	return {}
+
 def find_iso(server,version,subversion):
 	if server:
 		job_info = server.get_job_info("pop-os/debug/"+str(version))
@@ -27,13 +38,24 @@ def find_iso(server,version,subversion):
 		full_url = base_url+addins
 		return full_url
 
+def get_iso():
+
+	pass
+
 ## Looks like we'll need to create a special script to add packages to our base installs. Leaving this here for when that part of openQA is complete.
 
 def find_package():
 	pass
 
 def connecting_to_server(Url,UserName,Password):
-	#print("Connecting to Jenkins:",[Url,UserName,Password])
+	if Url == "" and settings["server"] != "":
+		Url = settings["server"]
+	if UserName == "" and settings["credentials"]["username"] != "":
+		UserName = settings["credentials"]["username"]
+	if Password == "" and settings["credentials"]["password"] != "":
+		Password = settings["credentials"]["password"] 
+	
+	print("Connecting to Jenkins:",[Url,UserName,Password])
 	server = jenkins.Jenkins(Url,username=UserName,password=Password)
 	#print (server.jobs_count())
 	
@@ -43,22 +65,36 @@ def connecting_to_server(Url,UserName,Password):
 		return False
 
 
-def current_state():
+def current_state(server_url,username,password):
 	error = ""
 	if server_url == "":
-		error += "Server has not been set.\n"
+		if settings["server"] != "":
+			server_url = settings["server"]
+		else:	
+			error += "Server has not been set.\n"
 	if username == "":
-		error += "Username has not been set.\n"
+		if settings["credentials"]["username"] != "":
+			username = settings["credentials"]["username"]
+		else:
+			error += "Username has not been set.\n"
 	if password == "":
-		error += "Password has not been set.\n"
+		if settings["credentials"]["password"] != "":
+			password = settings["credentials"]["password"]
+		else:
+			error += "Password has not been set.\n"
 
+	
 	if error != "":
 		error += "\nExample useage: sudo -u system76 ./jenkins server 'https://buildchain.system76.com/' username <username> password <password> get iso|package version|name <version>|<packagename>\n"
-		
+			
 	return error
 
 
 if __name__ == "__main__" :
+
+	settings = get_settings()
+	
+	#print(settings)
 
 	for arg in sys.argv:
 	
@@ -80,10 +116,35 @@ if __name__ == "__main__" :
 				#print("Not a valid get target")
 				exit()
 				
-	if current_state() == "":
+	if current_state(server_url,username,password) == "":
 		server = connecting_to_server(server_url,username,password)
+		print(server.jobs_count())
 		if server:
-			if sys.argv.index("get") != -1:
+			try:
+			 	sys.argv.index("get")
+			except:
+				for ver in settings["isos"]["versions"]:
+					subversion = "intel"
+					print(ver)
+					iso_url = find_iso(server,ver,subversion)
+					download = iso_url.split("/")[-1]
+					if not os.path.isfile("/var/lib/openqa/factory/iso/"+download):
+						username = settings["credentials"]["username"]
+						password = settings["credentials"]["password"]
+						subprocess.run(["curl","-u",username+":"+password,"-o","/var/lib/openqa/factory/iso/"+download,iso_url])
+						subprocess.run(["/var/lib/openqa/script/openqa-cli",
+						 				"api",
+						 				"-X",
+						 				"POST",
+						 				"isos",
+						 				"ISO="+download,
+						 				"DISTRI=pop",
+						 				"FLAVOR=DVD",
+						 				"VERSION="+ver,
+						 				"BUILD="+download.split("_")[-1].split(".")[0],
+						 				"ARCH=x86_64"])
+			else:
+				idx = sys.argv.index("get")
 				if sys.argv[idx+1] == "iso":
 					version = ""
 					subversion = "intel"
@@ -113,8 +174,10 @@ if __name__ == "__main__" :
 
 				elif sys.argv[idx+1] == "package":
 					pass
-						
-							
+			
+			
+			
+					
 	else:
 		print(current_state())
 			
