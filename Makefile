@@ -84,6 +84,7 @@ install-generic:
 	install -D -m 644 etc/openqa/workers.ini "$(DESTDIR)"/etc/openqa/workers.ini
 	install -D -m 644 etc/openqa/openqa.ini "$(DESTDIR)"/etc/openqa/openqa.ini
 	install -D -m 640 etc/openqa/database.ini "$(DESTDIR)"/etc/openqa/database.ini
+	install -D -m 644 etc/openqa/jenkins.json "$(DESTDIR)"/etc/openqa/jenkins.json
 
 	install -D -m 644 etc/logrotate.d/openqa "$(DESTDIR)"/etc/logrotate.d/openqa
 #
@@ -92,7 +93,8 @@ install-generic:
 	install -d -m 755 "$(DESTDIR)"/usr/lib/tmpfiles.d
 	
 	for i in $(shell ls `pwd`/systemd/*.{service,target,timer,path}); do \
-		install -m 644 $$i "$(DESTDIR)"/usr/lib/systemd/system ;\
+		install -m 644
+		 $$i "$(DESTDIR)"/usr/lib/systemd/system ;\
 	done
 	sed \
 		-e 's_^\(ExecStart=/usr/share/openqa/script/worker\) \(--instance %i\)$$_\1 --no-cleanup \2_' \
