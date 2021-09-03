@@ -24,7 +24,7 @@ perl-B-Hooks-OP-Check-0.22
 perl-B-Keywords-1.18
 perl-BSD-Resource-1.2911
 perl-Capture-Tiny-0.46
-perl-Carp-Always-0.13
+perl-Carp-Always-0.16
 perl-Carp-Clan-6.06
 perl-Class-Accessor-0.51
 perl-Class-Accessor-Chained-0.01
@@ -65,7 +65,7 @@ perl-DateTime-Format-Pg-0.16013
 perl-DateTime-Format-Strptime-1.74
 perl-DateTime-Locale-1.170000
 perl-DateTime-TimeZone-2.15
-perl-DBD-Pg-3.14.2
+perl-DBD-Pg-3.15.0
 perl-DBD-SQLite-1.70
 perl-DBI-1.643
 perl-DBIx-Class-0.082841
@@ -146,7 +146,7 @@ perl-Module-Pluggable-5.2
 perl-Module-Runtime-0.016
 perl-Module-Runtime-Conflicts-0.003
 perl-Mojo-IOLoop-ReadWriteProcess-0.28
-perl-Mojolicious-9.20
+perl-Mojolicious-9.21
 perl-Mojolicious-Plugin-AssetPack-2.13
 perl-Mojolicious-Plugin-OAuth2-1.59
 perl-Mojo-Pg-4.25

@@ -29,12 +29,14 @@ build_requires:
 common_requires:
   perl: '>= 5.20.0'
   perl(Archive::Extract): '> 0.7'
+  perl(Carp::Always): '>= 0.14.02'
   perl(Config::IniFiles):
   perl(Cpanel::JSON::XS): '>= 4.09'
   perl(Cwd):
   perl(Data::Dump):
   perl(Data::Dumper):
   perl(Digest::MD5):
+  perl(Filesys::Df):
   perl(Getopt::Long):
   perl(Minion): '>= 10.22'
   perl(Mojolicious): '>= 9.11'
@@ -90,7 +92,6 @@ main_requires:
   perl(warnings):
   perl(BSD::Resource):
   perl(Carp):
-  perl(Carp::Always):
   perl(Config::Tiny):
   perl(CommonMark):
   perl(Date::Format):
@@ -110,7 +111,6 @@ main_requires:
   perl(DBIx::Class::Storage::Statistics):
   perl(Exporter):
   perl(Fcntl):
-  perl(Filesys::Df):
   perl(File::Basename):
   perl(File::Copy):
   perl(File::Copy::Recursive):

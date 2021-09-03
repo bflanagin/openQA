@@ -54,7 +54,7 @@ our (@EXPORT, @EXPORT_OK);
     qw(collect_coverage_of_gru_jobs stop_service start_worker unstable_worker fake_asset_server),
     qw(cache_minion_worker cache_worker_service shared_hash embed_server_for_testing),
     qw(run_cmd test_cmd wait_for_or_bail_out perform_minion_jobs),
-    qw(prepare_clean_needles_dir prepare_default_needle mock_io_loop)
+    qw(prepare_clean_needles_dir prepare_default_needle mock_io_loop assume_all_assets_exist)
 );
 
 # The function OpenQA::Utils::service_port method hardcodes ports in a
@@ -357,9 +357,7 @@ sub create_websocket_server {
     return $h;
 }
 
-sub create_scheduler {
-    my ($port, $no_stale_job_detection) = @_;
-    $port //= service_port 'scheduler';
+sub create_scheduler ($port = service_port 'scheduler') {
     note("Starting Scheduler service. Port: $port");
     OpenQA::Scheduler::Client->singleton->port($port);
     _setup_sigchld_handler 'openqa-scheduler', start sub {
@@ -367,8 +365,6 @@ sub create_scheduler {
         local $ENV{MOJO_LISTEN}             = "http://127.0.0.1:$port";
         local $ENV{MOJO_INACTIVITY_TIMEOUT} = 9999;
         local @ARGV                         = ('daemon');
-        monkey_patch 'OpenQA::Scheduler::Model::Jobs', incomplete_and_duplicate_stale_jobs => sub { 1 }
-          if $no_stale_job_detection;
         OpenQA::Scheduler::run;
         Devel::Cover::report() if Devel::Cover->can('report');
     };
@@ -659,5 +655,7 @@ sub mock_io_loop (%args) {
         }) if $args{subprocess};
     return $io_loop_mock;
 }
+
+sub assume_all_assets_exist { OpenQA::Schema->singleton->resultset('Assets')->search({})->update({size => 0}) }
 
 1;

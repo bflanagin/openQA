@@ -49,10 +49,10 @@
 # The following line is generated from dependencies.yaml
 %define assetpack_requires perl(CSS::Minifier::XS) >= 0.01 perl(JavaScript::Minifier::XS) >= 0.11 perl(Mojolicious::Plugin::AssetPack) >= 1.36
 # The following line is generated from dependencies.yaml
-%define common_requires perl >= 5.20.0 perl(Archive::Extract) > 0.7 perl(Config::IniFiles) perl(Cpanel::JSON::XS) >= 4.09 perl(Cwd) perl(Data::Dump) perl(Data::Dumper) perl(Digest::MD5) perl(Getopt::Long) perl(Minion) >= 10.22 perl(Mojolicious) >= 9.11 perl(Regexp::Common) perl(Storable) perl(Try::Tiny)
+%define common_requires perl >= 5.20.0 perl(Archive::Extract) > 0.7 perl(Carp::Always) >= 0.14.02 perl(Config::IniFiles) perl(Cpanel::JSON::XS) >= 4.09 perl(Cwd) perl(Data::Dump) perl(Data::Dumper) perl(Digest::MD5) perl(Filesys::Df) perl(Getopt::Long) perl(Minion) >= 10.22 perl(Mojolicious) >= 9.11 perl(Regexp::Common) perl(Storable) perl(Try::Tiny)
 # runtime requirements for the main package that are not required by other sub-packages
 # The following line is generated from dependencies.yaml
-%define main_requires %assetpack_requires git-core hostname perl(BSD::Resource) perl(Carp) perl(Carp::Always) perl(CommonMark) perl(Config::Tiny) perl(DBD::Pg) >= 3.7.4 perl(DBI) >= 1.632 perl(DBIx::Class) >= 0.082801 perl(DBIx::Class::DeploymentHandler) perl(DBIx::Class::DynamicDefault) perl(DBIx::Class::OptimisticLocking) perl(DBIx::Class::ResultClass::HashRefInflator) perl(DBIx::Class::Schema::Config) perl(DBIx::Class::Storage::Statistics) perl(Date::Format) perl(DateTime) perl(DateTime::Duration) perl(DateTime::Format::Pg) perl(Exporter) perl(Fcntl) perl(File::Basename) perl(File::Copy) perl(File::Copy::Recursive) perl(File::Path) perl(File::Spec) perl(Filesys::Df) perl(FindBin) perl(Getopt::Long::Descriptive) perl(IO::Handle) perl(IPC::Run) perl(JSON::Validator) perl(LWP::UserAgent) perl(Module::Load::Conditional) perl(Module::Pluggable) perl(Mojo::Base) perl(Mojo::ByteStream) perl(Mojo::IOLoop) perl(Mojo::JSON) perl(Mojo::Pg) perl(Mojo::RabbitMQ::Client) >= 0.2 perl(Mojo::URL) perl(Mojo::Util) perl(Mojolicious::Commands) perl(Mojolicious::Plugin) perl(Mojolicious::Static) perl(Net::OpenID::Consumer) perl(POSIX) perl(Pod::POM) perl(SQL::Translator) perl(Scalar::Util) perl(Sort::Versions) perl(Text::Diff) perl(Time::HiRes) perl(Time::ParseDate) perl(Time::Piece) perl(Time::Seconds) perl(URI::Escape) perl(YAML::PP) >= 0.026 perl(YAML::XS) perl(aliased) perl(base) perl(constant) perl(diagnostics) perl(strict) perl(warnings)
+%define main_requires %assetpack_requires git-core hostname perl(BSD::Resource) perl(Carp) perl(CommonMark) perl(Config::Tiny) perl(DBD::Pg) >= 3.7.4 perl(DBI) >= 1.632 perl(DBIx::Class) >= 0.082801 perl(DBIx::Class::DeploymentHandler) perl(DBIx::Class::DynamicDefault) perl(DBIx::Class::OptimisticLocking) perl(DBIx::Class::ResultClass::HashRefInflator) perl(DBIx::Class::Schema::Config) perl(DBIx::Class::Storage::Statistics) perl(Date::Format) perl(DateTime) perl(DateTime::Duration) perl(DateTime::Format::Pg) perl(Exporter) perl(Fcntl) perl(File::Basename) perl(File::Copy) perl(File::Copy::Recursive) perl(File::Path) perl(File::Spec) perl(FindBin) perl(Getopt::Long::Descriptive) perl(IO::Handle) perl(IPC::Run) perl(JSON::Validator) perl(LWP::UserAgent) perl(Module::Load::Conditional) perl(Module::Pluggable) perl(Mojo::Base) perl(Mojo::ByteStream) perl(Mojo::IOLoop) perl(Mojo::JSON) perl(Mojo::Pg) perl(Mojo::RabbitMQ::Client) >= 0.2 perl(Mojo::URL) perl(Mojo::Util) perl(Mojolicious::Commands) perl(Mojolicious::Plugin) perl(Mojolicious::Static) perl(Net::OpenID::Consumer) perl(POSIX) perl(Pod::POM) perl(SQL::Translator) perl(Scalar::Util) perl(Sort::Versions) perl(Text::Diff) perl(Time::HiRes) perl(Time::ParseDate) perl(Time::Piece) perl(Time::Seconds) perl(URI::Escape) perl(YAML::PP) >= 0.026 perl(YAML::XS) perl(aliased) perl(base) perl(constant) perl(diagnostics) perl(strict) perl(warnings)
 # The following line is generated from dependencies.yaml
 %define client_requires curl git-core jq perl(Getopt::Long::Descriptive) perl(IO::Socket::SSL) >= 2.009 perl(IPC::Run) perl(JSON::Validator) perl(LWP::Protocol::https) perl(LWP::UserAgent) perl(Test::More) perl(YAML::PP) >= 0.020 perl(YAML::XS)
 # The following line is generated from dependencies.yaml
@@ -123,6 +123,10 @@ BuildRequires:  %{test_requires}
 %endif
 %if 0%{?suse_version} >= 1330
 Requires(pre):  group(nogroup)
+%endif
+%if 0%{?suse_version} > 1500
+BuildRequires:  sysuser-tools
+%sysusers_requires
 %endif
 
 %description
@@ -266,6 +270,10 @@ sed -e 's,/bin/env python,/bin/python,' -i script/openqa-label-all
 
 %build
 %make_build
+%if 0%{?suse_version} > 1500
+%sysusers_generate_pre usr/lib/sysusers.d/%{name}-worker.conf %{name}-worker %{name}-worker.conf
+%sysusers_generate_pre usr/lib/sysusers.d/geekotest.conf %{name} geekotest.conf
+%endif
 
 %check
 #for double checking
@@ -314,6 +322,11 @@ export LC_ALL=en_US.UTF-8
 export LANG=en_US.UTF-8
 %make_install
 
+%if 0%{?suse_version} <= 1500
+# we only use sysusers on Tumbleweed
+rm -rf %{buildroot}/%{_sysusersdir}
+%endif
+
 mkdir -p %{buildroot}%{_datadir}/openqa%{_sysconfdir}/openqa
 ln -s %{_sysconfdir}/openqa/openqa.ini %{buildroot}%{_datadir}/openqa%{_sysconfdir}/openqa/openqa.ini
 ln -s %{_sysconfdir}/openqa/database.ini %{buildroot}%{_datadir}/openqa%{_sysconfdir}/openqa/database.ini
@@ -349,11 +362,15 @@ mkdir %{buildroot}%{_localstatedir}/lib/openqa/webui/cache
 #
 %fdupes %{buildroot}/%{_prefix}
 
+%if 0%{?suse_version} > 1500
+%pre -f %{name}.pre
+%else
 %pre
 if ! getent passwd geekotest > /dev/null; then
     %{_sbindir}/useradd -r -g nogroup -c "openQA user" \
         -d %{_localstatedir}/lib/openqa geekotest 2>/dev/null || :
 fi
+%endif
 
 %service_add_pre %{openqa_services}
 
@@ -371,6 +388,9 @@ if [ "$1" = 1 ]; then
   fi
 fi
 
+%if 0%{?suse_version} > 1500
+%pre worker -f openQA-worker.pre
+%else
 %pre worker
 if ! getent passwd _openqa-worker > /dev/null; then
   %{_sbindir}/useradd -r -g nogroup -c "openQA worker" \
@@ -378,6 +398,7 @@ if ! getent passwd _openqa-worker > /dev/null; then
   # might fail for non-kvm workers (qemu package owns the group)
   %{_sbindir}/usermod _openqa-worker -a -G kvm || :
 fi
+%endif
 
 %service_add_pre %{openqa_worker_services}
 
@@ -547,6 +568,9 @@ fi
 %dir %{_localstatedir}/lib/openqa/share/factory/repo
 %dir %{_localstatedir}/lib/openqa/share/factory/other
 %ghost %{_localstatedir}/log/openqa
+%if 0%{?suse_version} > 1500
+%{_sysusersdir}/geekotest.conf
+%endif
 
 %files devel
 
@@ -611,6 +635,9 @@ fi
 %dir %{_localstatedir}/lib/openqa/cache
 # own one pool - to create the others is task of the admin
 %dir %{_localstatedir}/lib/openqa/pool/1
+%if 0%{?suse_version} > 1500
+%{_sysusersdir}/%{name}-worker.conf
+%endif
 
 %files client
 %dir %{_datadir}/openqa
