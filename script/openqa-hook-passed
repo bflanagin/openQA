@@ -1,0 +1,22 @@
+#!/bin/env python3
+
+import os
+import sys
+import subprocess
+
+
+def message():
+
+    subprocess.run(['curl',
+               '-X',
+               'POST',
+               '-H',
+               "'Content-type: application/json'",
+               '--data',
+               '{"text":"Job Passed"}',
+               "https://hooks.slack.com/services/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"])
+
+if __name__ == "__main__":
+	#sys.stderr.write(str(sys.argv))
+	message()
+	
