@@ -141,7 +141,7 @@ if __name__ == "__main__" :
 						 				"DISTRI=pop",
 						 				"FLAVOR=DVD",
 						 				"VERSION="+ver,
-						 				"BUILD="+ver+"_"+download.split("_")[-1].split(".")[0],
+						 				"BUILD="+download.split("_")[-1].split(".")[0]+"_"+ver,
 						 				"ARCH=x86_64"])
 			else:
 				idx = sys.argv.index("get")
