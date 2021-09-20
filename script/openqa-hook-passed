@@ -14,7 +14,7 @@ def message():
                "'Content-type: application/json'",
                '--data',
                '{"text":"Job Passed"}',
-               "https://hooks.slack.com/services/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"])
+               "https://hooks.slack.com/services/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"])
 
 if __name__ == "__main__":
 	#sys.stderr.write(str(sys.argv))
