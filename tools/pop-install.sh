@@ -415,7 +415,8 @@ a2enmod expires
 
 echo "Configuring Database"
 
-sudo -u postgres /usr/share/openqa/script/initdb
+sudo -u postgres /usr/share/openqa/script/initdb --prepare_init
+sudo -u system76 /usr/share/openqa/script/initdb --init_database
 sudo -u postgres /usr/share/openqa/script/setup-db
 
 systemctl restart apparmor

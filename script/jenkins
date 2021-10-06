@@ -163,10 +163,7 @@ if __name__ == "__main__" :
 					download = iso_url.split("/")[-1]
 					if not os.path.isfile("/var/lib/openqa/factory/iso/"+download):
 						subprocess.run(["curl","-u",username+":"+password,"-o","/var/lib/openqa/factory/iso/"+download,iso_url])
-					else:
-						print("Download already completed. continuing")
-						
-					subprocess.run(["/var/lib/openqa/script/openqa-cli",
+						subprocess.run(["/var/lib/openqa/script/openqa-cli",
 						 				"api",
 						 				"-X",
 						 				"POST",
