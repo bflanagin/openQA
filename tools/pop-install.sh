@@ -372,7 +372,7 @@ adduser _openqa-worker www-data
 adduser _openqa-worker kvm
  
 echo "Adding system76 user to the proper groups"
- 
+
 adduser system76 www-data
 adduser system76 kvm
 
@@ -415,9 +415,10 @@ a2enmod expires
 
 echo "Configuring Database"
 
-sudo -u system76 /usr/share/openqa/script/initdb --prepare_init
-sudo -u system76 /usr/share/openqa/script/initdb --init_database
 sudo -u postgres /usr/share/openqa/script/setup-db
+sudo /usr/share/openqa/script/initdb --prepare_init
+sudo -u system76 /usr/share/openqa/script/initdb --init_database
+
 
 systemctl restart apparmor
 systemctl restart apache2

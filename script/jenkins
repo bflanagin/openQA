@@ -161,7 +161,7 @@ if __name__ == "__main__" :
 						
 						subprocess.run(["curl","-u",username+":"+password,"-o","/var/lib/openqa/factory/iso/"+debug_download,iso_debug_url])
 					
-					subprocess.run(["/var/lib/openqa/script/openqa-cli",
+						subprocess.run(["/var/lib/openqa/script/openqa-cli",
 						 				"api",
 						 				"-X",
 						 				"POST",
@@ -170,14 +170,14 @@ if __name__ == "__main__" :
 						 				"DISTRI=pop",
 						 				"FLAVOR=DVD",
 						 				"VERSION="+ver,
-						 				"BUILD=_"+debug_download.split("_")[-1].split(".")[0]+"_"+ver,
+						 				"BUILD=_"+debug_download.split("_")[-1].split(".")[0]+"_"+ver+"_debug",
 						 				"ARCH=x86_64"])
 						 				
 					if not os.path.isfile("/var/lib/openqa/factory/iso/"+release_download):
 
 						subprocess.run(["curl","-u",username+":"+password,"-o","/var/lib/openqa/factory/iso/"+release_download,iso_release_url])
 					
-					subprocess.run(["/var/lib/openqa/script/openqa-cli",
+						subprocess.run(["/var/lib/openqa/script/openqa-cli",
 						 				"api",
 						 				"-X",
 						 				"POST",
@@ -186,7 +186,7 @@ if __name__ == "__main__" :
 						 				"DISTRI=pop",
 						 				"FLAVOR=DVD",
 						 				"VERSION="+ver,
-						 				"BUILD=_"+release_download.split("_")[-1].split(".")[0]+"_"+ver,
+						 				"BUILD=_"+release_download.split("_")[-1].split(".")[0]+"_"+ver+"_relase",
 						 				"ARCH=x86_64"])
 			else:
 				idx = sys.argv.index("get")
