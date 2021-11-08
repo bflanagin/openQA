@@ -1,23 +1,17 @@
 #!/usr/bin/env perl
 
-# Copyright (C) 2014-2020 SUSE LLC
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License along
-# with this program; if not, see <http://www.gnu.org/licenses/>.
+# Copyright 2014-2020 SUSE LLC
+# SPDX-License-Identifier: GPL-2.0-or-later
+
+=head1 NAME
+
+openqa-client - deprecated script for talking to an openQA server
 
 =head1 SYNOPSIS
 
-client [OPTIONS] PATH
+This script is deprecated, use openqa-cli instead
+
+openqa-client [OPTIONS] PATH
 
 =head1 OPTIONS
 
@@ -92,7 +86,11 @@ jobs/1/artefact post --form file.file=bar file.filename=bar.log
 
 print help
 
+=back
+
 =head2 Archive mode
+
+=over 4
 
 =item B<--archive, -a> DIRECTORY
 
@@ -107,6 +105,8 @@ Archive mode: Include thumbnails
 Archive mode: Download assets that do not exceed the specified limit in bytes
 The default limit is 200 MB.
 
+=back
+
 =head1 SYNOPSIS
 
 Interact with the openQA API by specified route entry points and optionally
@@ -115,6 +115,8 @@ without changing it. See the help on the openQA instance you want to access
 for available API routes.
 
 Common top level entry points: jobs, workers, isos.
+
+=over 4
 
 =item client --host openqa.example.com jobs
 
@@ -147,6 +149,7 @@ Trigger jobs on iso B<bar.iso> matching test suite B<blah>.
 
 Download all assets and test logs and images from job B<42> with asset limit of B<1GB> to B</path/to/directory>.
 
+=back
 =cut
 
 use strict;
@@ -167,10 +170,10 @@ sub usage($) {
 }
 
 GetOptions(
-    \%options,            'host=s',          'apibase=s',   'json-output',
-    'verbose|v',          'apikey:s',        'apisecret:s', 'params=s',
-    'form',               'json-data:s',     'help|h|?',    'archive|a:s',
-    'asset-size-limit:i', 'with-thumbnails', 'accept=s',    'yaml-output',
+    \%options, 'host=s', 'apibase=s', 'json-output',
+    'verbose|v', 'apikey:s', 'apisecret:s', 'params=s',
+    'form', 'json-data:s', 'help|h|?', 'archive|a:s',
+    'asset-size-limit:i', 'with-thumbnails', 'accept=s', 'yaml-output',
 ) or usage(1);
 
 warn "WARNING: openqa-client is deprecated and planned to be removed in the future. Please use openqa-cli instead\n"

@@ -1,25 +1,8 @@
-# Copyright (C) 2014-2021 SUSE LLC
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License along
-# with this program; if not, see <http://www.gnu.org/licenses/>.
+# Copyright 2014-2021 SUSE LLC
+# SPDX-License-Identifier: GPL-2.0-or-later
 
 package OpenQA::Schema::ResultSet::Assets;
-
-use strict;
-use warnings;
-
-use Mojo::Base -strict, -signatures;
-use base 'DBIx::Class::ResultSet';
+use Mojo::Base 'DBIx::Class::ResultSet', -signatures;
 
 use DBIx::Class::Timestamps 'now';
 use OpenQA::Log qw(log_info log_debug log_warning);
@@ -39,15 +22,16 @@ sub status_cache_file {
 
 # called when uploading an asset or finding one in scanning
 sub register ($self, $type, $name, $options = {}) {
-    unless ($name)                 { log_warning 'attempt to register asset with empty name'; return undef }
-    unless (grep /^$type$/, TYPES) { log_warning "asset type '$type' invalid";                return undef }
-    if     (!$options->{missing_ok} && !locate_asset $type, $name, mustexist => 1) {
+    unless ($name) { log_warning 'attempt to register asset with empty name'; return undef }
+    unless (grep /^$type$/, TYPES) { log_warning "asset type '$type' invalid"; return undef }
+    if (!$options->{missing_ok} && !locate_asset $type, $name, mustexist => 1) {
         log_warning "no file found for asset '$name' type '$type'";
         return undef;
     }
     $self->result_source->schema->txn_do(
         sub {
             my $asset = $self->find_or_create({type => $type, name => $name}, {key => 'assets_type_name'});
+            $asset->refresh_size if $options->{refresh_size};
             if (my $created_by = $options->{created_by}) {
                 my $scope = $options->{scope} // 'public';
                 $created_by->jobs_assets->create({asset_id => $asset->id, created_by => 1});
@@ -57,48 +41,39 @@ sub register ($self, $type, $name, $options = {}) {
         });
 }
 
-sub scan_for_untracked_assets {
-    my ($self) = @_;
+sub scan_for_untracked_assets ($self) {
 
     # search for new assets and register them
+    my $assetdir = assetdir();
     for my $type (TYPES) {
-        my @paths;
 
-        my $assetdir = assetdir();
+        my @paths;
         for my $subtype (qw(/ /fixed)) {
             my $path = "$assetdir/$type$subtype";
-            my $dh;
-            next unless opendir($dh, $path);
+            next unless opendir(my $dh, $path);
             for my $file (readdir($dh)) {
-                unless ($file eq 'fixed' or $file eq '.' or $file eq '..') {
-                    push(@paths, "$path/$file");
-                }
+                next if $file eq 'fixed' || $file eq '.' || $file eq '..';
+                push(@paths, "$path/$file");
             }
             closedir($dh);
         }
 
-        my %paths;
+        my %known = map { $_->name => 1 } $self->search({type => $type})->all;
+        my @register;
         for my $path (@paths) {
+            my $name = basename($path);
+            next if $known{$name};
 
-            my $basepath = basename($path);
-            # ignore links
-            next if -l $path;
+            # ignore links, files not owned by us and non-existing files/folders
+            # (the `_` file handle is used to avoid extra `stat` syscalls)
+            next if -l $path || !-o _ || !-e _;
 
-            # ignore files not owned by us
-            next unless -o $path;
-            # ignore non-existing files and folders
-            next unless -e $path;
-            $paths{$basepath} = 0;
+            push @register, $name;
         }
-        my $assets = $self->search({type => $type});
-        while (my $as = $assets->next) {
-            $paths{$as->name} = $as->id;
-        }
-        for my $asset (keys %paths) {
-            if ($paths{$asset} == 0) {
-                log_info "Registering asset $type/$asset";
-                $self->register($type, $asset);
-            }
+
+        for my $name (@register) {
+            log_info "Registering asset $type/$name";
+            $self->register($type, $name);
         }
     }
 }
@@ -108,12 +83,8 @@ sub refresh_assets {
     my ($self) = @_;
 
     while (my $asset = $self->next) {
-        if ($asset->is_fixed) {
-            $asset->update({fixed => 1});
-        }
-        else {
-            $asset->update({fixed => 0});
-        }
+        my $is_fixed = $asset->is_fixed ? 1 : 0;
+        $asset->update({fixed => $is_fixed}) if $is_fixed != $asset->fixed;
 
         $asset->refresh_size;
     }
@@ -122,8 +93,8 @@ sub refresh_assets {
 sub status {
     my ($self, %options) = @_;
     my $rsource = $self->result_source;
-    my $schema  = $rsource->schema;
-    my $dbh     = $schema->storage->dbh;
+    my $schema = $rsource->schema;
+    my $dbh = $schema->storage->dbh;
 
     # define query for prefetching the assets - note the sort order here:
     # We sort the assets in descending order by highest related job ID,
@@ -137,7 +108,8 @@ sub status {
                 a.id as id, a.name as name, a.t_created as t_created, a.size as size, a.type as type,
                 a.fixed as fixed,
                 coalesce(max(j.id), -1) as max_job,
-                max(case when j.id is not null and j.state!='done' and j.state!='cancelled' then 1 else 0 end) as pending
+                max(case when j.id is not null and j.state!='done' and j.state!='cancelled' then 1 else 0 end) as pending,
+                last_use_job_id as last_job
             from assets a
                 left join jobs_assets ja on a.id=ja.asset_id
                 left join jobs j on j.id=ja.job_id
@@ -183,11 +155,11 @@ END_SQL
     my (@assets, %asset_info, %group_info, %parent_group_info);
     $group_info{0} = {
         size_limit_gb => 0,
-        size          => 0,
-        group         => 'Untracked',
-        id            => undef,
-        parent_id     => undef,
-        picked        => 0,
+        size => 0,
+        group => 'Untracked',
+        id => undef,
+        parent_id => undef,
+        picked => 0,
     };
 
     # query the database in one transaction
@@ -203,28 +175,29 @@ END_SQL
             # prefetch all assets
             my $assets_arrayref = $dbh->selectall_arrayref($prioritized_assets_query);
             for my $asset_array (@$assets_arrayref) {
-                my $id   = $asset_array->[0];
+                my $id = $asset_array->[0];
                 my $name = $asset_array->[1];
                 if (!$name) {
                     log_warning("asset cleanup: Skipping asset $id because its name is empty.");
                     next;
                 }
 
-                my $type    = $asset_array->[4];
-                my $fixed   = $asset_array->[5];
+                my $type = $asset_array->[4];
+                my $fixed = $asset_array->[5];
                 my $dirname = ($fixed ? $type . '/fixed/' : $type . '/');
                 my $max_job = $asset_array->[6];
-                my %asset   = (
-                    id        => $id,
-                    name      => ($dirname . $name),
+                my %asset = (
+                    id => $id,
+                    name => ($dirname . $name),
                     t_created => $asset_array->[2],
-                    size      => $asset_array->[3],
-                    type      => $type,
-                    fixed     => $fixed,
-                    max_job   => ($max_job >= 0 ? $max_job : undef),
-                    pending   => $asset_array->[7],
-                    groups    => {},
-                    parents   => {},
+                    size => $asset_array->[3],
+                    type => $type,
+                    fixed => $fixed,
+                    max_job => ($max_job >= 0 ? $max_job : undef),
+                    pending => $asset_array->[7],
+                    last_job => $asset_array->[8],
+                    groups => {},
+                    parents => {},
                 );
                 $asset_info{$id} = \%asset;
                 push(@assets, \%asset);
@@ -232,7 +205,7 @@ END_SQL
 
             # query list of job groups to show assets by job group
             # note: We collect data required for /admin/assets *and* the limit_assets task.
-            my $groups                      = $schema->resultset('JobGroups');
+            my $groups = $schema->resultset('JobGroups');
             my $fail_on_inconsistent_status = $options{fail_on_inconsistent_status};
             while (my $group = $groups->next) {
                 my $parent = $group->parent;
@@ -243,32 +216,32 @@ END_SQL
                       = (defined $parent_size_limit_gb ? $parent_size_limit_gb * 1024 * 1024 * 1024 : undef);
                     $parent_id = $parent->id;
                     $parent_group_info{$parent_id} = {
-                        id            => $parent_id,
+                        id => $parent_id,
                         size_limit_gb => $parent_size_limit_gb,
-                        size          => $parent_size,
-                        picked        => 0,
-                        group         => $parent->name,
+                        size => $parent_size,
+                        picked => 0,
+                        group => $parent->name,
                     };
                 }
 
-                my $group_id      = $group->id;
+                my $group_id = $group->id;
                 my $size_limit_gb = $group->size_limit_gb;
                 $group_info{$group_id} = {
-                    id            => $group_id,
-                    parent_id     => $parent_id,
+                    id => $group_id,
+                    parent_id => $parent_id,
                     size_limit_gb => $size_limit_gb,
-                    size          => $size_limit_gb * 1024 * 1024 * 1024,
-                    picked        => 0,
-                    group         => $group->full_name,
+                    size => $size_limit_gb * 1024 * 1024 * 1024,
+                    picked => 0,
+                    group => $group->full_name,
                 };
 
                 # add the max job ID for this group
                 $max_job_by_group_prepared_query->execute($group_id);
                 while (my $result = $max_job_by_group_prepared_query->fetchrow_hashref) {
-                    my $asset_info   = $asset_info{$result->{asset_id}} or next;
+                    my $asset_info = $asset_info{$result->{asset_id}} or next;
                     my $init_max_job = $asset_info->{max_job} || 0;
-                    my $res_max_job  = $result->{max_job};
-                    $asset_info->{groups}->{$group_id}   = $res_max_job;
+                    my $res_max_job = $result->{max_job};
+                    $asset_info->{groups}->{$group_id} = $res_max_job;
                     $asset_info->{parents}->{$parent_id} = 1 if defined $parent_id;
 
                     # check whether the data from the 2nd select is inconsistent with what we've got from the 1st
@@ -282,39 +255,39 @@ END_SQL
 
     # compute group sizes
     for my $asset (@assets) {
-        my $largest_group_id  = 0;       # default to "zero group" for groupless assets
+        my $largest_group_id = 0;    # default to "zero group" for groupless assets
         my $largest_parent_id = undef;
-        my $largest_size      = 0;
-        my @groups            = sort { $a <=> $b } keys %{$asset->{groups}};
-        my $asset_name        = $asset->{name};
-        my $asset_size        = $asset->{size} // 0;
+        my $largest_size = 0;
+        my @groups = sort { $a <=> $b } keys %{$asset->{groups}};
+        my $asset_name = $asset->{name};
+        my $asset_size = $asset->{size} // 0;
 
         # search for parent job group or job group with the highest asset size limit which has still enough space
         # left for the asset
         for my $group_id (@groups) {
-            my $group_info        = $group_info{$group_id};
-            my $group_size        = $group_info->{size};
-            my $parent_group_id   = $group_info->{parent_id};
-            my $parent_group_info = defined $parent_group_id   ? $parent_group_info{$parent_group_id} : undef;
-            my $parent_group_size = defined $parent_group_info ? $parent_group_info->{size}           : undef;
+            my $group_info = $group_info{$group_id};
+            my $group_size = $group_info->{size};
+            my $parent_group_id = $group_info->{parent_id};
+            my $parent_group_info = defined $parent_group_id ? $parent_group_info{$parent_group_id} : undef;
+            my $parent_group_size = defined $parent_group_info ? $parent_group_info->{size} : undef;
             if (defined $parent_group_size) {
                 log_debug("Checking whether asset $asset_name ($asset_size) fits into"
                       . " parent $parent_group_id ($parent_group_size)");
                 next unless $largest_size < $parent_group_size && $parent_group_size >= $asset_size;
 
                 log_debug("Asset $asset_name ($asset_size) picked into parent $parent_group_id");
-                $largest_size      = $parent_group_size;
+                $largest_size = $parent_group_size;
                 $largest_parent_id = $parent_group_id;
-                $largest_group_id  = $group_id;
+                $largest_group_id = $group_id;
             }
             else {
                 log_debug("Checking whether asset $asset_name ($asset_size) fits into group $group_id ($group_size)");
                 next unless $largest_size < $group_size && $group_size >= $asset_size;
 
                 log_debug("Asset $asset_name ($asset_size) picked into group $group_id");
-                $largest_size      = $group_size;
+                $largest_size = $group_size;
                 $largest_parent_id = undef;
-                $largest_group_id  = $group_id;
+                $largest_group_id = $group_id;
             }
         }
 
@@ -328,13 +301,13 @@ END_SQL
         else {
             $determined_group = $group_info{$largest_group_id};
         }
-        $determined_group->{size}   -= $asset_size;
+        $determined_group->{size} -= $asset_size;
         $determined_group->{picked} += $asset_size;
     }
 
     # produce cache file for /admin/assets
     unless ($options{skip_cache_file}) {
-        my $cache_file_path     = status_cache_file;
+        my $cache_file_path = status_cache_file;
         my $new_cache_file_path = "$cache_file_path.new";
         try {
             my $cache_file = Mojo::File->new($new_cache_file_path);
@@ -344,15 +317,15 @@ END_SQL
             $cache_file->spurt(
                 encode_json(
                     {
-                        data        => \@assets,
-                        groups      => \%group_info,
-                        parents     => \%parent_group_info,
+                        data => \@assets,
+                        groups => \%group_info,
+                        parents => \%parent_group_info,
                         last_update => now() . 'Z',
                     }));
             rename($new_cache_file_path, $cache_file_path) or die $!;
         }
         catch {
-            log_warning("Unable to create cache file $cache_file_path: $@");
+            log_warning("Unable to create cache file $cache_file_path: $@");    # uncoverable statement
         };
     }
 
@@ -363,7 +336,7 @@ sub untie_asset_from_job_and_unregister_if_unused ($self, $type, $name, $job) {
     $self->result_source->schema->txn_do(
         sub {
             my %query = (type => $type, name => $name, fixed => 0);
-            return 0 unless my $asset = $self->find(\%query, {join => 'jobs_assets'});
+            return 0 unless my $asset = $self->find(\%query);
             $job->jobs_assets->search({asset_id => $asset->id})->delete;
             return 0 if defined $asset->size || $asset->jobs->count;
             $asset->delete;
