@@ -1,17 +1,5 @@
-# Copyright (C) 2021 SUSE LLC
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License along
-# with this program; if not, see <http://www.gnu.org/licenses/>.
+# Copyright 2021 SUSE LLC
+# SPDX-License-Identifier: GPL-2.0-or-later
 
 package OpenQA::Task::Utils;
 use Mojo::Base -signatures;
@@ -20,12 +8,24 @@ use Exporter qw(import);
 use OpenQA::Log qw(log_warning);
 use OpenQA::Utils qw(check_df);
 use Scalar::Util qw(looks_like_number);
+use Time::Seconds;
 
 our (@EXPORT, @EXPORT_OK);
-@EXPORT_OK = (qw(finish_job_if_disk_usage_below_percentage));
+@EXPORT_OK = (qw(acquire_limit_lock_or_retry finish_job_if_disk_usage_below_percentage));
+
+# acquire lock to prevent multiple limit_* tasks to run in parallel unless
+# concurrency is configured to be allowed
+sub acquire_limit_lock_or_retry ($job) {
+    my $app = $job->app;
+    return 1 if $app->config->{cleanup}->{concurrent};
+    my $guard = $app->minion->guard('limit_tasks', ONE_DAY);
+    return $guard if $guard;
+    $job->retry({delay => ONE_MINUTE});
+    return 0;
+}
 
 sub finish_job_if_disk_usage_below_percentage (%args) {
-    my $job        = $args{job};
+    my $job = $args{job};
     my $percentage = $job->app->config->{misc_limits}->{$args{setting}};
 
     unless (looks_like_number($percentage) && $percentage >= 0 && $percentage <= 100) {

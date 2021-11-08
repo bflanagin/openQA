@@ -217,7 +217,17 @@ function setCurrentPreview(stepPreviewContainer, force) {
 
   // show preview for other/regular results
   var link = stepPreviewContainer.find('a');
-  if (!link || !link.data('url')) {
+  if (!link) {
+    return;
+  }
+  if (link.data('text')) {
+    stepPreviewContainer.addClass('current_preview');
+    setPageHashAccordingToCurrentTab(link.attr('href'), true);
+    const text = unescape(link.data('text'));
+    previewSuccess(stepPreviewContainer, text, force);
+    return;
+  }
+  if (!link.data('url')) {
     return;
   }
   stepPreviewContainer.addClass('current_preview');
@@ -729,6 +739,33 @@ function renderCommentsTab(response) {
   const tabPanelElement = this.panelElement;
   tabPanelElement.innerHTML = response;
   $(tabPanelElement).find('[data-toggle="popover"]').popover({html: true});
+  // Add job status icons to /t123 urls
+  const hostname = $(location).attr('host');
+  $(tabPanelElement)
+    .find('a')
+    .each(function (index, element) {
+      const href = $(element).attr('href');
+      if (href === undefined) {
+        return;
+      }
+      const re = new RegExp('^https?://' + hostname + '/t([0-9]+)$');
+      const found = href.match(re);
+      if (!found) {
+        return;
+      }
+      const id = found[1];
+      const url = '/api/v1/experimental/jobs/' + id + '/status';
+      $.ajax(url)
+        .done(function (response) {
+          const i = document.createElement('i');
+          const job = response;
+          const stateHTML = testStateHTML(job);
+          i.className = stateHTML[0];
+          i.title = stateHTML[1];
+          element.appendChild(i);
+        })
+        .fail(function (jqXHR, textStatus, errorThrown) {});
+    });
 }
 
 function renderInvestigationTab(response) {

@@ -25,33 +25,20 @@ use Time::HiRes qw(time sleep);
 use OpenQA::WebAPI;
 use OpenQA::Log 'log_info';
 use OpenQA::Utils;
-use OpenQA::Test::Utils 'collect_coverage_of_gru_jobs';
+use OpenQA::Test::Utils;
 use POSIX '_exit';
 
 our $_driver;
 our $webapi;
-our $gru;
 our $mojoport;
 our $startingpid = 0;
 
 sub _start_app {
     my ($args) = @_;
-    $mojoport    = $ENV{OPENQA_BASE_PORT} = $args->{mojoport} // $ENV{MOJO_PORT} // Mojo::IOLoop::Server->generate_port;
+    $mojoport = $ENV{OPENQA_BASE_PORT} = $args->{mojoport} // $ENV{MOJO_PORT} // Mojo::IOLoop::Server->generate_port;
     $startingpid = $$;
-    $webapi      = OpenQA::Test::Utils::create_webapi($mojoport);
-    $gru         = _start_gru() if ($args->{with_gru});
+    $webapi = OpenQA::Test::Utils::create_webapi($mojoport);
     return $mojoport;
-}
-
-sub _start_gru {
-    start sub {
-        $0 = 'openqa-gru';
-        log_info("starting gru\n");
-        $ENV{MOJO_MODE} = 'test';
-        my $app = Mojo::Server->new->build_app('OpenQA::WebAPI');
-        collect_coverage_of_gru_jobs($app);
-        $app->start('gru', 'run', '-m', 'test');
-    };
 }
 
 sub enable_timeout {
@@ -78,9 +65,9 @@ sub start_driver {
         my @chrome_option_keys = (qw(chromeOptions goog:chromeOptions));
 
         my %opts = (
-            base_url           => "http://localhost:$mojoport/",
-            default_finder     => 'css',
-            webelement_class   => 'Test::Selenium::Remote::WebElement',
+            base_url => "http://localhost:$mojoport/",
+            default_finder => 'css',
+            webelement_class => 'Test::Selenium::Remote::WebElement',
             extra_capabilities => {
                 loggingPrefs => {browser => 'ALL'},
                 map { $_ => {args => []} } @chrome_option_keys,
@@ -89,9 +76,12 @@ sub start_driver {
                 # generate Test::Most failure instead of croaking to preserve
                 # context but bail out to not have repeated entries for the
                 # same problem exceeded console scrollback buffers easily
-                my ($driver, $exception, $args) = @_;                   # uncoverable statement
+                my ($driver, $exception, $args) = @_;    # uncoverable statement
                 my $err = (split /\n/, $exception)[0] =~ s/Error while executing command: //r;   # uncoverable statement
-                BAIL_OUT($err . ' at ' . __FILE__ . ':' . __LINE__);                             # uncoverable statement
+                $err .= ' at ' . __FILE__ . ':' . __LINE__;    # uncoverable statement
+
+                # prevent aborting the complete test when interactively debugging
+                $INC{'perl5db.pl'} ? fail $err : BAIL_OUT($err);    # uncoverable statement
             },
         );
 
@@ -108,7 +98,7 @@ sub start_driver {
               for @chrome_option_keys;
         }
         my $startup_timeout = $ENV{OPENQA_SELENIUM_TEST_STARTUP_TIMEOUT} // 10;
-        $_driver           = Test::Selenium::Chrome->new(%opts, startup_timeout => $startup_timeout);
+        $_driver = Test::Selenium::Chrome->new(%opts, startup_timeout => $startup_timeout);
         $_driver->{is_wd3} = 0;    # ensure the Selenium::Remote::Driver instance uses JSON Wire protocol
         enable_timeout;
         # Scripts are considered stuck after this timeout
@@ -146,7 +136,7 @@ sub check_driver_modules {
     use Module::Load::Conditional qw(can_load);
     return can_load(
         modules => {
-            'Test::Selenium::Chrome'   => '1.20',
+            'Test::Selenium::Chrome' => '1.20',
             'Selenium::Remote::Driver' => undef,
         });
 }
@@ -164,16 +154,16 @@ sub _default_check_interval {
 }
 
 sub wait_for_ajax {
-    my (%args)         = @_;
+    my (%args) = @_;
     my $check_interval = _default_check_interval($args{interval});
-    my $timeout        = 60 * 5;
-    my $slept          = 0;
-    my $msg            = $args{msg} ? (': ' . $args{msg}) : '';
+    my $timeout = 60 * 5;
+    my $slept = 0;
+    my $msg = $args{msg} ? (': ' . $args{msg}) : '';
 
     while (!$_driver->execute_script('return window.jQuery && jQuery.active === 0')) {
         if ($timeout <= 0) {
             fail("Wait for jQuery timed out$msg");    # uncoverable statement
-            return undef;                             # uncoverable statement
+            return undef;    # uncoverable statement
         }
 
         $args{with_minion}->perform_jobs_in_foreground if $args{with_minion};
@@ -215,7 +205,7 @@ sub javascript_console_has_no_warnings_or_errors {
         }
 
         my $source = $log_entry->{source};
-        my $msg    = $log_entry->{message};
+        my $msg = $log_entry->{message};
         if ($source eq 'network') {
             # ignore errors when gravatar not found
             next if ($msg =~ qr/gravatar/);    # uncoverable statement
@@ -271,7 +261,7 @@ sub element_visible {
     is(scalar @elements, 1, $selector . ' present exactly once');
 
     my $element = $elements[0];
-    ok($element,                 $selector . ' exists') or return;
+    ok($element, $selector . ' exists') or return;
     ok($element->is_displayed(), $selector . ' visible');
 
     # assert the element's text
@@ -327,7 +317,7 @@ sub map_elements ($selector, $mapping) {
 
 sub wait_until {
     my ($check_function, $check_description, $timeout, $check_interval) = @_;
-    $timeout        //= 100;
+    $timeout //= 100;
     $check_interval //= .1;
 
     while (1) {
@@ -337,7 +327,7 @@ sub wait_until {
         }
         if ($timeout <= 0) {
             fail($check_description);    # uncoverable statement
-            return 0;                    # uncoverable statement
+            return 0;    # uncoverable statement
         }
         $timeout -= $check_interval;
         wait_for_ajax(msg => $check_description) or sleep $check_interval;
@@ -357,8 +347,8 @@ sub wait_until_element_gone {
 }
 
 sub wait_for_element {
-    my (%args)                = @_;
-    my $selector              = $args{selector};
+    my (%args) = @_;
+    my $selector = $args{selector};
     my $expected_is_displayed = $args{is_displayed};
 
     my $element;
@@ -389,10 +379,6 @@ sub kill_driver {
     if ($webapi) {
         $webapi->signal('TERM');
         $webapi->finish;
-    }
-    if ($gru) {
-        $gru->signal('TERM');
-        $gru->finish;
     }
 }
 

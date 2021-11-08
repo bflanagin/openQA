@@ -1,17 +1,5 @@
-# Copyright (C) 2019 SUSE LLC
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License along
-# with this program; if not, see <http://www.gnu.org/licenses/>.
+# Copyright 2019 SUSE LLC
+# SPDX-License-Identifier: GPL-2.0-or-later
 
 package OpenQA::Worker::Isotovideo::Client;
 use Mojo::Base -base;
@@ -29,7 +17,7 @@ sub stop_gracefully {
     $url .= '/broadcast';
 
     log_info('Trying to stop job gracefully by announcing it to command server via ' . $url);
-    my $ua          = $self->ua;
+    my $ua = $self->ua;
     my $old_timeout = $ua->request_timeout;
     $ua->request_timeout(10);
     $ua->post(

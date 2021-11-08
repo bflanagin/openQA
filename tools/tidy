@@ -19,9 +19,8 @@ EOF
     exit
 }
 
-cleanup() {
-    find . -name '*.tdy' -delete
-}
+find-tdy() { find . \( -type d -path '*/container/webui/workdir/db' -prune -type f \) -or \( -name '*.tdy' \) ; }
+cleanup()  { find-tdy | xargs -r rm ; }
 
 set -eo pipefail
 
@@ -76,10 +75,9 @@ test -e tools/tidy || exit 1
 
 cleanup
 
-find-files | xargs perltidy --pro=.../.perltidyrc
+find-files | xargs perltidy --no-valign --pro=.../.perltidyrc
 
-find . -name "*.tdy" | while read -r file
-do
+find-tdy | while read -r file; do
     if diff -u "${file%.tdy}" "$file"; then
         continue
     fi

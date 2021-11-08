@@ -2,6 +2,7 @@
 % layout 'bootstrap';
 % title 'Test summary';
 % use OpenQA::Jobs::Constants;
+% use List::Util qw(sum);
 
 % content_for 'ready_function' => begin
   setupOverview();
@@ -33,33 +34,16 @@
             </div>
         </div>
         <div class="card-body">
-            Passed: <span class="badge badge-success"><%= $aggregated->{passed} %></span>
-
-            % if ($aggregated->{not_complete}) {
-                Incomplete:
-                <span class="badge badge-secondary"><%= $aggregated->{not_complete} %></span>
+            % my @badges = qw(success secondary  warning     danger info      primary light   light);
+            % my @labels = qw(Passed  Incomplete Soft-Failed Failed Scheduled Running Aborted None);
+            % my $index  = 0;
+            % for my $category (qw(passed not_complete softfailed failed scheduled running aborted none)) {
+                % my ($label, $badge) = ($labels[$index], $badges[$index++]);
+                % next unless my $count = delete $aggregated->{$category};
+                <%= $label %>: <span class="badge badge-<%= $badge %>"><%= $count %></span>
             % }
-            % if ($aggregated->{softfailed}) {
-                Soft-Failed:
-                <span class="badge badge-warning"><%= $aggregated->{softfailed} %></span>
-            % }
-            Failed: <span class="badge badge-danger"><%= $aggregated->{failed} %></span>
-
-            % if ($aggregated->{scheduled}) {
-                Scheduled:
-                <span class="badge badge-info"><%= $aggregated->{scheduled} %></span>
-            % }
-            % if ($aggregated->{running}) {
-                Running:
-                <span class="badge badge-primary"><%= $aggregated->{running} %></span>
-            % }
-            % if ($aggregated->{none}) {
-                None:
-                <span class="badge badge-light"><%= $aggregated->{none} %></span>
-            % }
-            % if ($aggregated->{unknown}) {
-                Unknown:
-                <span class="badge badge-light"><%= $aggregated->{unknown} %></span>
+            % if (my $unknown_count = sum values %$aggregated) {
+                Unknown: <span class="badge badge-light"><%= $unknown_count %></span>
             % }
         </div>
     </div>
@@ -79,20 +63,20 @@
                     <p>Additional tweaking of the query is possible by leaving
                     out query parameters completely or specifying them
                     multiple times equivalent to an logical "or" search.</p>',
-                    'https://open.qa/docs/#_allow_group_overview_query_by_result_gh531' => 'Wiki')
+                    'https://open.qa/docs/#_allow_group_overview_query_by_result_gh531' => 'the documentation')
                 %>
             <span>no filter present, click to toggle filter form</span>
         </div>
         <div class="card-body">
             <form action="#" type="get" id="filter-form">
                 <div class="form-group" id="filter-results">
-                    <strong>Result</strong>
+                    <strong>Job result</strong>
                     % for my $result (OpenQA::Jobs::Constants::RESULTS) {
                         <label><input value="<%= $result %>" name="result" type="checkbox" id="filter-<%= $result %>"> <%= ucfirst $result =~ s/_/ /r %></label>
                     % }
                 </div>
                 <div class="form-group" id="filter-states">
-                    <strong>State</strong>
+                    <strong>Job state</strong>
                     % for my $state (OpenQA::Jobs::Constants::STATES) {
                         <label><input value="<%= $state %>" name="state" type="checkbox" id="filter-<%= $state %>"> <%= ucfirst $state =~ s/_/ /r %></label>
                     % }
@@ -126,28 +110,35 @@
                     </div>
                 </div>
                 <div class="row" id="filter-modules">
-                    <div class="col-8">
+                    <div class="col-4">
                         <div class="form-group">
-                            <label for="filter-modules"><strong>Module</strong></label>
+                            <label for="filter-modules"><strong>Module name</strong></label>
+                            <%= help_popover('Help for the <em>Module name</em> filter' => '
+                            <p>Shows jobs that contain the specified modules</p>') %>
                             <input name="modules" type="text" id="modules"
                             placeholder="modules, comma separated, e.g. mod1,mod2"
                             class="form-control">
                         </div>
                     </div>
+                    <div class="col-4">
+                        <div class="form-group">
+                            <label for="filter-module-re"><strong>Module code</strong></label>
+                            <%= help_popover('Help for the <em>Module code</em> filter' => '
+                            <p>Shows jobs that contain the modules found by grep command over module source code</p>') %>
+                            <input type="text" class="form-control" name="module_re" placeholder="regular expression" id="filter-module-re">
+                        </div>
+                    </div>
                     <div class="col-2">
                         <div class="form-group">
-                            <label for="modules_result"><strong>Module Result</strong></label>
+                            <label for="modules_result"><strong>Module result</strong></label>
+                            <%= help_popover('Help for the <em>Module result</em> filter' => '
+                            <p>Show jobs with selected result.</p>') %>'
                             <select name="modules_result" id="modules_result" data-placeholder="any" class="chosen-select" multiple>
                                 % for my $modules_result (OpenQA::Jobs::Constants::MODULE_RESULTS) {
                                     <option><%= $modules_result %></option>
                                 % }
                             </select>
                         </div>
-                    </div>
-                    <div class="col-2 align-self-center">
-                         <%= help_popover('Help for the <em>Module</em> filter' => '
-                         <p>Shows jobs that contain the specified modules and allows also to filter them by the results.</p>
-                         <p>If module result is not selected, shows all the specified modules regardless of the results.</p>') %>
                     </div>
                 </div>
                 <div class="form-group">
