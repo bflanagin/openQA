@@ -1,0 +1,112 @@
+#!/usr/bin/env python3
+
+import subprocess
+import os
+import sys
+import json
+
+
+# uses pop/scripts/apt remote 
+# and pop/scripts/branches to create a list of active PRs 
+
+def pr_list(apt_path):
+	print("Gathering remote PRs")
+	proc = subprocess.run([apt_path,"remote"], capture_output = True)
+	prlist = proc.stdout.decode().split("\n")
+	print("Done")
+	return prlist
+	
+def branch_list(branches_path):
+	print("Gathering all branches")
+	proc = subprocess.run([branches_path,"--json"],capture_output = True)
+	#print(proc.stdout.decode())
+	brchlist = json.loads(proc.stdout.decode())
+	print("Done")
+	return brchlist
+	
+
+def generate_list():
+	pop_script_path = "/var/lib/openqa/factory/pop/scripts/";
+	apt = None
+	branches = None
+	
+	if os.path.exists(pop_script_path):
+		apt = pr_list(pop_script_path+"apt")
+		branches = branch_list(pop_script_path+"branches")
+		if branches:
+			for key in branches.keys():
+				#print(key)
+				for bkey in branches.get(key):
+					if bkey in apt and bkey.find("master") == -1:
+						print("pr_test_"+key+"_"+bkey)
+						if key not in ["firmware",
+									"keyboard-configurator",
+									"system76-power",
+									"system76-io-dkms",
+									"system76-firmware",
+									"fwupd",
+									"firmware-manager"
+										]:
+							print(create_test("_pr_test_"+key+"_"+bkey))
+		
+	else:
+		download_repo()
+		
+	test_list = []
+	
+	
+	return test_list
+
+
+# downloads pop repo for needed scripts 
+
+def download_repo():
+	url = "https://github.com/pop-os/pop";
+	local_path = "/var/lib/openqa/factory/pop";
+	subprocess.run(["git", "clone", "--recursive", url, local_path], check=True);
+	
+	generate_list();
+
+def create_test(pr_name):
+	sts_img = "IMAGE_BASE=pop_sts_image.qcow2"
+	lts_img = "IMAGE_BASE=pop_lts_image.qcow2"
+	
+	if ["distinst","installer"] in pr_name.split("_"):
+		print("install")
+		sts_img = "ISO=sts.iso",
+		lts_img = "ISO=lts.iso",
+	
+	proc = subprocess.run(["/var/lib/openqa/script/openqa-cli",
+						 				"api",
+						 				"-X",
+						 				"POST",
+						 				"isos",
+						 				"DISTRI=pop",
+						 				"FLAVOR=DVD",
+						 				"VERSION=21.10",
+						 				sts_img,
+						 				"BUILD="+pr_name,
+						 				"TEST=pop_pr_test_sts",
+						 				"ARCH=x86_64"]
+						 				,capture_output = True)
+						 				
+	proc1 = subprocess.run(["/var/lib/openqa/script/openqa-cli",
+						 				"api",
+						 				"-X",
+						 				"POST",
+						 				"isos",
+						 				"DISTRI=pop",
+						 				"FLAVOR=DVD",
+						 				"VERSION=20.04",
+						 				lts_img,
+						 				"BUILD="+pr_name,
+						 				"TEST=pop_pr_test_lts",
+						 				"ARCH=x86_64"]
+						 				,capture_output = True)
+	
+	output = proc.stdout.decode()+"\n"+proc.stdout.decode()
+	return output;
+	
+
+for pr in generate_list():
+	print(pr);

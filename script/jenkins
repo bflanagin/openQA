@@ -30,21 +30,25 @@ def find_debug_iso(server,version,subversion):
 		base_url = job_info["lastStableBuild"]["url"]
 		iso = job_info["lastStableBuild"]["number"]
 		if subversion == "intel":
-			label = "master/artifact/build/pop-os/"+str(version)+"/pop-os_"+str(version)+"_amd64_intel_debug_"+str(iso)+".iso"
+			label = "built-in/artifact/build/pop-os/"+str(version)+"/pop-os_"+str(version)+"_amd64_intel_debug_"+str(iso)+".iso"
 		else:
-			label = "master/artifact/build/pop-os/"+str(version)+"/pop-os_"+str(version)+"_nvidia_debug_"+str(iso)+".iso"
+			label = "built-in/artifact/build/pop-os/"+str(version)+"/pop-os_"+str(version)+"_nvidia_debug_"+str(iso)+".iso"
 		addins = "CHANNEL="+str(subversion)+",label="+label
-		
+		print(version,subversion,iso)
 		full_url = base_url+addins
+		print(full_url)
 		return full_url
 
 def find_release_iso(server,version,subversion):
 	if server:
-		job_info = server.get_job_info("pop-os/release/"+str(version))
-		
-		base_url = "https://pop-iso.sfo2.cdn.digitaloceanspaces.com/"
-		iso = job_info["lastStableBuild"]["number"]
-		print(version,subversion,iso)
+		try:
+			job_info = server.get_job_info("pop-os/release/"+str(version))
+		except:
+			print("No job for ",str(version))
+		else:
+			base_url = "https://pop-iso.sfo2.cdn.digitaloceanspaces.com/"
+			iso = job_info["lastStableBuild"]["number"]
+			print(version,subversion,iso)
 		
 		#if subversion == "intel":
 			#20.04/amd64/intel/34/pop-os_20.04_amd64_intel_34.iso
@@ -53,11 +57,11 @@ def find_release_iso(server,version,subversion):
 		#	label = "master/artifact/build/pop-os/"+str(version)+"/pop-os_"+str(version)+"_nvidia_debug_"+str(iso)+".iso"
 			
 		#addins = "CHANNEL="+str(subversion)+",label="+label
-		addins = str(version)+"/amd64/"+str(subversion)+"/"+str(iso)+"/pop-os_"+str(version)+"_amd64_intel_"+str(iso)+".iso"
+			addins = str(version)+"/amd64/"+str(subversion)+"/"+str(iso)+"/pop-os_"+str(version)+"_amd64_intel_"+str(iso)+".iso"
 		
-		full_url = base_url+addins
-		print(full_url)
-		return full_url
+			full_url = base_url+addins
+			print(full_url)
+			return full_url
 
 def get_iso():
 
@@ -153,11 +157,16 @@ if __name__ == "__main__" :
 					
 					iso_debug_url = find_debug_iso(server,ver,subversion)
 					iso_release_url = find_release_iso(server,ver,subversion)
+					if iso_debug_url:
+						debug_download = iso_debug_url.split("/")[-1]
+					else:
+						debug_download = None
+					if iso_release_url:
+						release_download = iso_release_url.split("/")[-1]
+					else:
+						release_download = None
 					
-					debug_download = iso_debug_url.split("/")[-1]
-					release_download = iso_release_url.split("/")[-1]
-					
-					if not os.path.isfile("/var/lib/openqa/factory/iso/"+debug_download):
+					if debug_download and not os.path.isfile("/var/lib/openqa/factory/iso/"+debug_download):
 						
 						subprocess.run(["curl","-u",username+":"+password,"-o","/var/lib/openqa/factory/iso/"+debug_download,iso_debug_url])
 					
@@ -172,9 +181,19 @@ if __name__ == "__main__" :
 						 				"VERSION="+ver,
 						 				"BUILD=_"+debug_download.split("_")[-1].split(".")[0]+"_"+ver+"_debug",
 						 				"ARCH=x86_64"])
+						#subprocess.run(["/var/lib/openqa/script/openqa-cli",
+						 #				"api",
+						 #				"-X",
+						 #				"POST",
+						 #				"isos",
+						 #				"ISO="+debug_download,
+						 #				"DISTRI=pop",
+						 #				"FLAVOR=DVD",
+						 #				"VERSION="+ver,
+						 #				"BUILD="+debug_download.split("_")[-1].split(".")[0]+"_debug_bios",
+						 #				"ARCH=x86_64_bios"])
 						 				
-					if not os.path.isfile("/var/lib/openqa/factory/iso/"+release_download):
-
+					if release_download and not os.path.isfile("/var/lib/openqa/factory/iso/"+release_download):
 						subprocess.run(["curl","-u",username+":"+password,"-o","/var/lib/openqa/factory/iso/"+release_download,iso_release_url])
 					
 						subprocess.run(["/var/lib/openqa/script/openqa-cli",
@@ -183,11 +202,23 @@ if __name__ == "__main__" :
 						 				"POST",
 						 				"isos",
 						 				"ISO="+release_download,
-						 				"DISTRI=pop",
+										"DISTRI=pop",
 						 				"FLAVOR=DVD",
 						 				"VERSION="+ver,
 						 				"BUILD=_"+release_download.split("_")[-1].split(".")[0]+"_"+ver+"_relase",
 						 				"ARCH=x86_64"])
+						 
+						#subprocess.run(["/var/lib/openqa/script/openqa-cli",
+						# 				"api",
+						# 				"-X",
+						#				"POST",
+						# 				"isos",
+						# 				"ISO="+release_download,
+						# 				"DISTRI=pop",
+						# 				"FLAVOR=DVD",
+						# 				"VERSION="+ver,
+						# 				"BUILD="+release_download.split("_")[-1].split(".")[0]+"_bios",
+						 #				"ARCH=x86_64_bios"])
 			else:
 				idx = sys.argv.index("get")
 				if sys.argv[idx+1] == "iso":
@@ -216,6 +247,17 @@ if __name__ == "__main__" :
 						 				"VERSION="+version,
 						 				"BUILD="+download.split("_")[-1].split(".")[0],
 						 				"ARCH=x86_64"])
+					#subprocess.run(["/var/lib/openqa/script/openqa-cli",
+					#	 				"api",
+					#	 				"-X",
+					#	 				"POST",
+					#	 				"isos",
+					#	 				"ISO="+download,
+					#	 				"DISTRI=pop",
+					#	 				"FLAVOR=DVD",
+					#	 				"VERSION="+version,
+					#	 				"BUILD="+download.split("_")[-1].split(".")[0]+"_bios",
+					#	 				"ARCH=x86_64_bios"])
 
 				elif sys.argv[idx+1] == "package":
 					pass
