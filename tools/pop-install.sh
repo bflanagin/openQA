@@ -10,9 +10,13 @@ fi
 
 echo "Installing prerequisites" 
 
+apt-get -y -q install git-lfs os-autoinst
+
 clear 
 
 echo "Installing Pearl packages"
+
+apt-get -y -q install perl-base perl-modules-* perl-openssl-defaults perl libperl-dev libperl*
 
 apt-get -y -q install libalgorithm-c3-perl \
 libalgorithm-diff-perl \
@@ -251,8 +255,6 @@ libparse-recdescent-perl \
 libpath-class-perl 
 
 apt-get -y -q install \
-libperl-dev \
-libperl* \
 libperlio-layers-perl \
 libpod-pom-perl \
 libreadonly-perl \
@@ -304,6 +306,7 @@ libtext-wrapi18n-perl \
 libtie-ixhash-perl \
 libtime-parsedate-perl \
 libtimedate-perl \
+libtime-moment-perl \
 libtry-tiny-perl \
 libtypes-serialiser-perl \
 libunicode-map-perl \
@@ -329,12 +332,7 @@ libxs-parse-sublike-perl \
 libxstring-perl \
 libyaml-libyaml-perl \
 libyaml-perl \
-libyaml-pp-perl \
-libtime-moment-perl \
-perl-base \
-perl-modules-* \
-perl-openssl-defaults \
-perl
+libyaml-pp-perl
 
 echo "Installing Apache"
 
