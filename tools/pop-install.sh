@@ -35,7 +35,9 @@ libcairo-perl \
 libcarp-always-perl \
 libcarp-clan-perl \
 libcgi-fast-perl \
-libcgi-pm-perl \
+libcgi-pm-perl 
+
+apt-get -y -q install \
 libclass-accessor-chained-perl \
 libclass-accessor-grouped-perl \
 libclass-accessor-perl \
@@ -53,7 +55,9 @@ libclass-tiny-perl \
 libclass-unload-perl \
 libclass-xsaccessor-perl \
 libclone-choose-perl \
-libclone-perl \
+libclone-perl 
+
+apt-get -y -q install \
 libcommon-sense-perl \
 libcommonmark-perl \
 libconfig-any-perl \
@@ -86,6 +90,8 @@ libdatetime-perl \
 libdatetime-timezone-perl \
 libdbd-pg-perl \
 libdbi-perl \
+
+apt-get -y -q install \
 libdbix-class-deploymenthandler-perl \
 libdbix-class-dynamicdefault-perl \
 libdbix-class-optimisticlocking-perl \
@@ -113,7 +119,9 @@ libexception-class-perl \
 libexporter-declare-perl \
 libexporter-tiny-perl \
 libextutils-depends-perl \
-libextutils-pkgconfig-perl \
+libextutils-pkgconfig-perl
+
+apt-get -y -q install \
 libfcgi-perl \
 libfile-basedir-perl \
 libfile-copy-recursive-perl \
@@ -154,7 +162,9 @@ libio-pty-perl \
 libio-socket-ip-perl \
 libio-socket-socks-perl \
 libio-socket-ssl-perl \
-libio-stringy-perl \
+libio-stringy-perl
+
+apt-get -y -q install \
 libipc-run-perl \
 libipc-run3-perl \
 libipc-system-simple-perl \
@@ -202,7 +212,9 @@ libmojo-server-fastcgi-perl \
 libmojolicious-perl \
 libmojolicious-plugin-assetpack-perl \
 libmojolicious-plugin-oauth2-perl \
-libmojolicious-plugin-openapi-perl \
+libmojolicious-plugin-openapi-perl
+
+apt-get -y -q install \
 libmoo-perl \
 libmoose-perl \
 libmoosex-markasmethods-perl \
@@ -236,9 +248,11 @@ libparams-util-perl \
 libparams-validate-perl \
 libparams-validationcompiler-perl \
 libparse-recdescent-perl \
-libpath-class-perl \
+libpath-class-perl 
+
+apt-get -y -q install \
 libperl-dev \
-libperl5.32 \
+libperl* \
 libperlio-layers-perl \
 libpod-pom-perl \
 libreadonly-perl \
@@ -316,8 +330,9 @@ libxstring-perl \
 libyaml-libyaml-perl \
 libyaml-perl \
 libyaml-pp-perl \
+libtime-moment-perl \
 perl-base \
-perl-modules-5.32 \
+perl-modules-* \
 perl-openssl-defaults \
 perl
 
