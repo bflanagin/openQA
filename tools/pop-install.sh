@@ -10,7 +10,8 @@ fi
 
 echo "Installing prerequisites" 
 
-apt-get -y -q install git-lfs os-autoinst
+apt-get -y -q install git-lfs os-autoinst python3-pip
+pip3 install -q --no-input python-jenkins
 
 clear 
 
@@ -18,15 +19,13 @@ echo "Installing Pearl packages"
 
 apt-get -y -q install perl-base perl-modules-* perl-openssl-defaults perl libperl-dev libperl*
 
-apt-get -y -q install libalgorithm-c3-perl \
-libalgorithm-diff-perl \
-libalgorithm-diff-xs-perl \
-libalgorithm-merge-perl \
-libaliased-perl \
-libappconfig-perl \
-libarchive-any-perl \
-libarchive-extract-perl \
-libarchive-zip-perl \
+apt-get -y -q install libalgorithm-c3-perl libalgorithm-diff-perl libalgorithm-diff-xs-perl libalgorithm-merge-perl 
+
+apt-get -y -q install libaliased-perl libappconfig-perl libarchive-any-perl libarchive-extract-perl libarchive-zip-perl
+
+apt-get -y -q install libcarp-always-perl libcarp-clan-perl libcgi-fast-perl libcgi-pm-perl 
+
+apt-get -y -q install \
 libauthen-sasl-perl \
 libb-compiling-perl \
 libb-hooks-endofscope-perl \
@@ -35,11 +34,7 @@ libbit-vector-perl \
 libbsd-resource-perl \
 libbytes-random-secure-perl \
 libcairo-gobject-perl \
-libcairo-perl \
-libcarp-always-perl \
-libcarp-clan-perl \
-libcgi-fast-perl \
-libcgi-pm-perl 
+libcairo-perl
 
 apt-get -y -q install \
 libclass-accessor-chained-perl \
@@ -82,66 +77,30 @@ libdata-dumper-concise-perl \
 libdata-optlist-perl \
 libdata-page-perl \
 libdata-validate-domain-perl \
-libdata-validate-ip-perl \
-libdate-calc-perl \
-libdate-calc-xs-perl \
-libdate-manip-perl \
-libdatetime-format-builder-perl \
-libdatetime-format-pg-perl \
-libdatetime-format-strptime-perl \
-libdatetime-locale-perl \
-libdatetime-perl \
-libdatetime-timezone-perl \
-libdbd-pg-perl \
-libdbi-perl \
+libdata-validate-ip-perl
+
+apt-get -q -y install libdate-calc-perl libdate-calc-xs-perl libdate-manip-perl libdatetime-format-builder-perl \
+libdatetime-format-pg-perl libdatetime-format-strptime-perl libdatetime-locale-perl libdatetime-perl \
+libdatetime-timezone-perl libtime-parsedate-perl libtimedate-perl libtime-moment-perl 
+
+
+apt-get -y -q install libdbd-pg-perl libdbi-perl libdbix-class-deploymenthandler-perl libdbix-class-dynamicdefault-perl \
+libdbix-class-optimisticlocking-perl libdbix-class-perl libdbix-class-schema-loader-perl
+
+apt-get -y -q install libdevel-argnames-perl libdevel-callchecker-perl libdevel-caller-perl libdevel-declare-parser-perl \
+libdevel-declare-perl libdevel-globaldestruction-perl libdevel-lexalias-perl libdevel-overloadinfo-perl libdevel-partialdump-perl \
+libdevel-stacktrace-perl 
+
+apt-get -y -q install libdigest-perl-md5-perl libdist-checkconflicts-perl libdpkg-perl libdynaloader-functions-perl \
+libencode-locale-perl liberror-perl libev-perl
+
+apt-get -y -q install libeval-closure-perl libexception-class-perl libexporter-declare-perl libexporter-tiny-perl libextutils-depends-perl libextutils-pkgconfig-perl
+
+apt-get -y -q install libfcgi-perl libfile-basedir-perl libfile-copy-recursive-perl libfile-desktopentry-perl libfile-fcntllock-perl \
+libfile-listing-perl libfile-map-perl libfile-mimeinfo-perl libfile-mmagic-perl libfile-readbackwards-perl libfile-sharedir-perl \
+libfile-which-perl libfilesys-df-perl libfont-afm-perl libfuture-asyncawait-perl libfuture-perl libsort-versions-perl
 
 apt-get -y -q install \
-libdbix-class-deploymenthandler-perl \
-libdbix-class-dynamicdefault-perl \
-libdbix-class-optimisticlocking-perl \
-libdbix-class-perl \
-libdbix-class-schema-loader-perl \
-libdevel-argnames-perl \
-libdevel-callchecker-perl \
-libdevel-caller-perl \
-libdevel-declare-parser-perl \
-libdevel-declare-perl \
-libdevel-globaldestruction-perl \
-libdevel-lexalias-perl \
-libdevel-overloadinfo-perl \
-libdevel-partialdump-perl \
-libdevel-stacktrace-perl \
-libdigest-perl-md5-perl \
-libdist-checkconflicts-perl \
-libdpkg-perl \
-libdynaloader-functions-perl \
-libencode-locale-perl \
-liberror-perl \
-libev-perl \
-libeval-closure-perl \
-libexception-class-perl \
-libexporter-declare-perl \
-libexporter-tiny-perl \
-libextutils-depends-perl \
-libextutils-pkgconfig-perl
-
-apt-get -y -q install \
-libfcgi-perl \
-libfile-basedir-perl \
-libfile-copy-recursive-perl \
-libfile-desktopentry-perl \
-libfile-fcntllock-perl \
-libfile-listing-perl \
-libfile-map-perl \
-libfile-mimeinfo-perl \
-libfile-mmagic-perl \
-libfile-readbackwards-perl \
-libfile-sharedir-perl \
-libfile-which-perl \
-libfilesys-df-perl \
-libfont-afm-perl \
-libfuture-asyncawait-perl \
-libfuture-perl \
 libgd-perl \
 libglib-object-introspection-perl \
 libglib-perl \
@@ -254,10 +213,9 @@ libparams-validationcompiler-perl \
 libparse-recdescent-perl \
 libpath-class-perl 
 
+apt-get -y -q install libperlio-layers-perl libpod-pom-perl libreadonly-perl
+
 apt-get -y -q install \
-libperlio-layers-perl \
-libpod-pom-perl \
-libreadonly-perl \
 libref-util-perl \
 libref-util-xs-perl \
 libregexp-common-perl \
@@ -268,7 +226,6 @@ libset-object-perl \
 libsnowball-norwegian-perl \
 libsnowball-swedish-perl \
 libsocket6-perl \
-libsort-versions-perl \
 libspecio-perl \
 libspreadsheet-parseexcel-perl \
 libspreadsheet-writeexcel-perl \
@@ -290,23 +247,13 @@ libtemplate-perl \
 libterm-readkey-perl \
 libtest-deep-perl \
 libtest-exception-lessclever-perl \
-libtest-warn-perl \
-libtext-autoformat-perl \
-libtext-brew-perl \
-libtext-charwidth-perl \
-libtext-diff-perl \
-libtext-german-perl \
-libtext-iconv-perl \
-libtext-markdown-perl \
-libtext-recordparser-perl \
-libtext-reform-perl \
-libtext-tabulardisplay-perl \
-libtext-unidecode-perl \
-libtext-wrapi18n-perl \
+libtest-warn-perl 
+
+apt-get -q -y install libtext-autoformat-perl libtext-brew-perl libtext-charwidth-perl libtext-diff-perl libtext-german-perl libtext-iconv-perl \
+libtext-markdown-perl libtext-recordparser-perl libtext-reform-perl libtext-tabulardisplay-perl libtext-unidecode-perl libtext-wrapi18n-perl 
+
+apt-get -q -y install \
 libtie-ixhash-perl \
-libtime-parsedate-perl \
-libtimedate-perl \
-libtime-moment-perl \
 libtry-tiny-perl \
 libtypes-serialiser-perl \
 libunicode-map-perl \
@@ -329,10 +276,9 @@ libxml-writer-perl \
 libxml-xpath-perl \
 libxml-xpathengine-perl \
 libxs-parse-sublike-perl \
-libxstring-perl \
-libyaml-libyaml-perl \
-libyaml-perl \
-libyaml-pp-perl
+libxstring-perl 
+
+apt-get -y -q install libyaml-libyaml-perl libyaml-perl libyaml-pp-perl
 
 echo "Installing Apache"
 
