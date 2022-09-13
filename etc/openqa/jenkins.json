@@ -4,6 +4,6 @@
 	"username":"",
 	"password":""},
 "isos":{
-	"versions":["20.04","21.04","21.10"] 
+	"versions":["22.04"] 
 	}
 }

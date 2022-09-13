@@ -387,8 +387,10 @@ chown -R system76:www-data /var/lib/openqa/
 sudo -u system76 git clone https://github.com/pop-os/os-autoinst-distri-pop.git /var/lib/openqa/tests/pop
 sleep 4
 cd /var/lib/openqa/tests/pop
-sudo -u system76 /var/lib/openqa/script/load_templates ./products/templates
-
+sudo -u system76 /var/lib/openqa/script/load_templates ./products/templates.dump
+echo "rebooting system"
+sleep 5
+sudo reboot
 
  
  
