@@ -1,20 +1,24 @@
 = Quick Install
 
-Install os-autoinst before installing openQA: https://github.com/system76/os-autoinst
-
-Create a system76 user account, and add him to the adm and sudo groups. 
+Create a system76 user account, and add it to the adm and sudo groups. 
 
 cd ./openQA
 
 sudo ./tools/pop-install.sh
 
-reboot
 
 cd /var/lib/openqa/
 
-sudo -u system76 ./script/load_templates /tests/pop/products/templates
+sudo -u system76 ./script/load_templates /tests/pop/products/templates.dump
 
-Place latest ISOs in /var/lib/openqa/factory/iso/
+== Start tests
+
+edit /etc/openqa/jenkins.json with your account credentials.
+
+Run the jenkins script in /var/lib/openqa/script. This will automatically download whatever versions are listed in jenkins.json
+
+./script/jenkins
+ 
 
 == Ensure you have the latest needles
 

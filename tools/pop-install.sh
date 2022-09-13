@@ -366,6 +366,7 @@ systemctl enable --now postgresql
 systemctl enable --now openqa-webui
 systemctl enable --now openqa-scheduler 
 systemctl enable --now openqa-worker@1
+systemctl enable --now openqa-worker@2
  
 echo "Configuring Apache"
 cp /etc/apache2/vhosts.d/openqa.conf.template /etc/apache2/vhosts.d/openqa.conf
@@ -388,9 +389,13 @@ sudo -u system76 git clone https://github.com/pop-os/os-autoinst-distri-pop.git 
 sleep 4
 cd /var/lib/openqa/tests/pop
 sudo -u system76 /var/lib/openqa/script/load_templates ./products/templates.dump
-echo "rebooting system"
-sleep 5
-sudo reboot
 
+
+echo "Enabling services"
+systemctl start postgresql
+systemctl start openqa-webui
+systemctl start openqa-scheduler 
+systemctl start openqa-worker@1
+systemctl start openqa-worker@2
  
  
